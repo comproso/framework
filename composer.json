@@ -1,0 +1,29 @@
+{
+	"name": "comproso/framework",
+	"description": "comproso behavioral measurement framework",
+	"type": "library",
+	"version": "0.7.0.0022",
+	"license": "AGPL-3.0",
+	"authors": [
+		{
+			"name": "Thiemo Kunze",
+			"email": "kunze@wangaz.com",
+			"role": "Developer"
+		}
+	],
+	"support": {
+		"email": "support@comproso.org"
+	},
+	"require": {
+		"laravel/framework": "~5.2",
+		"maatwebsite/excel": "~2.1.0"
+	},
+	"suggest": {
+		"predis/predis": "~1.0"
+	},
+	"autoload": {
+		"psr-4": {
+			"Comproso\\Framework\\": "src/"
+		}
+	}
+}
