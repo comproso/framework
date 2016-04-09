@@ -21,23 +21,34 @@
 namespace Comproso\Framework\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\Request;
 
 use Auth;
-use Cache;
+use Request;
+use Session;
+use Validator;
 use View;
 
+use Carbon\Carbon;
+
 use Comproso\Framework\Traits\ModelTrait;
+use Comproso\Framework\Traits\ModelHelperTrait;
+use Comproso\Framework\Models\Result;
 
 class Page extends Model
 {
-	use ModelTrait;
+	use ModelTrait, ModelHelperTrait;
 
     // table
     protected $table = 'pages';
 
     // whitelist
-    protected $fillable = [];
+    protected $fillable = ['results', 'template'];
+
+    // JSON protection
+    protected $hidden = ['template', 'nav', 'repetitions'];
+
+    // timestamps
+    #protected $dates = ['repetition_interval', 'time_limit'];
 
     // Item model
     public function items()
@@ -51,6 +62,12 @@ class Page extends Model
 	    return $this->belongsTo($this->TestModel);
     }
 
+    // Result Model
+    public function results()
+    {
+	    return $this->hasMany($this->ResultModel);
+    }
+
     /*
 	 *	special Page functionalities
 	 *
@@ -60,35 +77,76 @@ class Page extends Model
 	public function generate()
 	{
 		// get Items
-		$items = $this->items()->orderBy('position')->get();
+		if(isset($this->items))
+			$items = $this->items;
+		else
+			$items = $this->items()->orderBy('position')->get();
 
 		// prepare results
 		$results = [];
 
 		foreach($items as $item)
 		{
-			if(Cache::has($item->id))
-				$cache = Cache::get($item->id);
+			if(Session::has($item->id))
+				$cache = Session::pull($item->id);
 			else
 				$cache = null;
 
 			// store generated Item
-			$results[] = $item->generate($cache);
+			$result = $item->generate($cache);
+			Session::put($item->id, $result);
+			$results[] = $result;
 		}
 
-		return View::make($this->template, [
-			'test_id'		=> $this->test_id,
-			'page_id'		=> $this->id,
-			'results'		=> $results,
-			'nav'			=> $this->operations_template,
-			'assets'		=> json_decode($this->assets)
-		])->render();
+		// add standard assets
+		if(isset($this->assets))
+			$assets = (is_array(json_decode($this->assets))) ? json_decode($this->assets) : [json_decode($this->assets)];
+		else
+			$assets = [];
+
+		if($this->default_assets)
+		{
+			// debug vs production files
+			if(getenv('APP_DEBUG') == true)
+				array_push($assets, "vendor/comproso/framework/comproso.js");
+			else
+				array_push($assets, "vendor/comproso/framework/comproso.min.js");
+		}
+
+		// prepare page and return Page object
+		$page = new Page;
+		$page->template = $this->template;
+		$page->test_id = $this->test_id;
+		$page->page_id = $this->id;
+		$page->time_limit = $this->time_limit;
+		$page->interval = $this->repetition_interval;
+		$page->results = $results;
+		$page->nav = $this->operations_template;
+		$page->assets = $assets;
+		$page->repetitions = $this->repepetitions;
+
+		return $page;
 	}
 
 	// proceeding of data
-	public function proceed(Request $request, $reporting = null, $caching = null)
+	public function proceed($reporting = null)
 	{
-		$items = $this->items()->orderBy('position')->get();
+		// get items
+		if(isset($this->items))
+			$items = $this->items;
+		else
+			$items = $this->items()->orderBy('position')->get();
+
+		// get current request
+		#$request = Request::all();
+
+		// validate request
+		// TBD
+
+		// manage system and process data
+		$sys_time = Carbon::now()->getTimestamp() - Session::get('start_time_page')->getTimestamp();
+		$usr_time = Request::input('ccusr_nd') - Request::input('ccusr_tstrt');
+		$usr_actions = Request::input('ccusr_ctns');
 
 		// prepare results
 		$results = [];
@@ -96,78 +154,236 @@ class Page extends Model
 		// validate and proceed items
 		foreach($items as $item)
 		{
-			$itemResult = $item->proceed($request);
-
-			if(!$itemResult)
-				\Log::error(get_class($item)." (".$item->id."): invalid request data");
+			// get itemResult
+			if(Request::has('item'.$item->id))
+				$itemResult = $item->proceed(Request::input('item'.$item->id));
 			else
-				$results = array_merge($results, [$item->id => $itemResult]);
-		}
+				$itemResult = $item->proceed();
 
-		// get test
-		$test = $this->test()->first();
+			// validate request data
+			$validation = Validator::make(['item' => $itemResult], ['item' => $item->validation]);
+
+			// store results if allowed
+			if($validation->fails())
+				\Log::error(get_class($item)." (".$item->id."): invalid request data");
+			elseif($itemResult !== null)
+			{
+				// cache item if meaningful
+				Session::put($item->id, $itemResult);
+
+				$results[$item->id] = $itemResult;
+			}
+		}
 
 		// check reporting config
 		if(is_null($reporting))
-			$reporting = $test->conf_reporting;
-
-		// check caching config
-		if(is_null($caching))
-			$caching = $test->conf_caching;
+			$reporting = $this->test()->first()->reporting;
 
 		// report data
-		if($reporting)
+		if(($reporting) AND (Auth::check()))
 		{
-			$test->addResults($results);
-		}
+			// prepare process data
+			$rawProcessData = json_decode(Request::input('ccusr_ctns'));
+			$processData = [];
 
-		// cache data
-		if($caching)
-		{
-			$dotResults = array_dot($results);
+			// get User start time
+			$usrStartTime = Request::input('ccusr_tstrt');
 
-			foreach($dotResults as $item => $result)
+			// check if data were given
+			if(!empty($rawProcessData))
 			{
-				Cache::put($item, $result);
+
+				foreach($rawProcessData as $usrAction)
+				{
+					// adjust timestamp
+					$tmstmp = $usrAction->tstmp - $usrStartTime;
+					$tmstmp = intval(round(($tmstmp / 1000), 0));
+
+					$processData[$tmstmp] = [
+						intval(str_replace('item', '', $usrAction->item)) => $usrAction->value,	// !!!!!
+					];
+				}
 			}
+
+			// create Result model
+			$save = new Result;
+            $save->test_repetition_counter = intval(Session::get('test_repetition'));
+            $save->user_id = (int) Session::get('user_id');
+            $save->page_repetition_counter = intval(Session::get('page_visit_counter'));
+            $save->values = json_encode($results);
+            $save->process_data = json_encode($processData);
+            $save->server_time_delta = intval(Carbon::now()->getTimestamp() - Session::get('start_time_page')->getTimestamp());
+            $save->user_time_delta = intval(round(((Request::input('ccusr_nd') - $usrStartTime) / 1000), 0));
+
+            // save result
+            $this->results()->save($save);
 		}
 
 		return true;
 	}
 
-	// present page
-	public function scopePresent($query, $user = null)
+	/**
+	 *	create the matching view.
+	 *
+	 *	@return object
+	 */
+	public function toView()
 	{
-		if(is_null($user))
-			$user = Auth::user();
+		// abort if given
+		if(is_null($this))
+			return redirect('/');
 
-		$pid = $user->tests('test_id', $this->test_id)->first()->pivot->page_id;
+		foreach($this->results as $result)
+		{
+			$results = $result->results;
 
-		if(is_null($pid))
-			return $query->orderBy('position')->first();
-		else
-			return $query->find($pid);
+			// add CSS
+			if(!is_null($result->cssid))
+				$results->cssid = $result->cssid;
+
+			if(!is_null($result->cssclass))
+				$results->cssclass = $result->cssclass;
+
+			// add form name
+			$results->name = $result->name;
+
+			$views[] = View::make($result->template, $results)->render();
+		}
+
+		// add navigation bar
+		if(!is_null($this->nav))
+			$views[] = View::make($this->nav)->render();
+
+		return View::make($this->template, [
+			'test_id'		=> $this->test_id,
+			'page_id'		=> $this->id,
+			'time_limit'	=> $this->time_limit,
+			'interval'		=> $this->interval,
+			'results'		=> $views,
+			'round'			=> Session::get('page_visit_counter'),
+			#'nav'			=> $this->nav,
+			#'assets'		=> $this->assets,
+		])->render();
 	}
 
-	// page with position X
+	/**
+	 *	create an automatic response.
+	 *
+	 *	@return Response
+	 */
+	public function respond()
+	{
+		// if null
+		if(is_null($this))
+			return redirect('/');
+
+		// hint to test's function
+		if(Auth::check())
+			return $this->test()->findOrFail($this->test_id)->guarded()->respond();
+		else
+			return $this->test()->findOrFail($this->test_id)->respond();
+	}
+
+	/**
+	 *	create valid assets.
+	 *
+	 *	@return Response
+	 */
+	public function assets()
+	{
+		// get assets
+		$assets = json_decode($this->assets);
+
+		// create path
+		foreach($assets as $key => $asset)
+		{
+			$assets[$key] = asset($asset);
+		}
+
+		return $assets;
+	}
+
+	/**
+	 *	check if page or test limits are reached.
+	 *
+	 *	@return boolean
+	 */
+	/*public function reachedLimit()
+	{
+		// check testing time limit
+		if(false)
+			return true;
+
+		// check page time limit
+		if(false)
+			return true;
+
+		// check page call limit
+		if(false)
+			return true;
+
+		// if no check matches, return false
+		return false;
+	}*/
+
+	/**
+	 *	finish a page.
+	 *
+	 *	@return
+	 */
+	public function finish()
+	{
+		// update current page
+		Session::put('current_page', $this->next()->first()->id);
+		Session::put('page_visit_counter', 0);
+
+		// if user is authenticate
+		if($this->isAuthGuarded())
+		{
+
+		}
+	}
+
+	/**
+	 *	page model at position X.
+	 *
+	 *	@return
+	 */
 	public function scopeOfPosition($query, $position = 1)
 	{
-		return $query->where('position', $position);
+		return $query->where('position', $position)->where('test_id', $this->test_id);
 	}
 
-	// next page
-	public function scopeFollowing($query)
+	/**
+	 *	current page model.
+	 *
+	 *	@return
+	 */
+	public function scopeCurrent($query)
 	{
-		$pos = $this->present()->position;
-
-		return $query->ofPosition(($pos + 1));
+		if(Session::has('current_page'))
+			return $query->find(Session::get('current_page'));
+		else
+			return $query->ofPosition()->first();
 	}
 
-	// previous page
+	/**
+	 *	following page model.
+	 *
+	 *	@return
+	 */
+	public function scopeNext($query)
+	{
+		return $query->ofPosition(($this->position + 1));
+	}
+
+	/**
+	 *	previous page model.
+	 *
+	 *	@return
+	 */
 	public function scopePrevious($query)
 	{
-		$pos = $this->present()->position;
-
-		return $query->ofPosition(($pos - 1));
+		return $query->ofPosition(($this->position - 1));
 	}
 }

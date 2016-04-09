@@ -18,19 +18,34 @@
  *
  */
 
- namespace Comproso\Framework\Contracts;
+namespace Comproso\Framework\Traits;
 
- interface ElementContract
- {
-	 // Element implementation
-	 public function implement($data);
+use Auth;
 
-	 // Element generation
-	 public function generate($cache = null);
+trait ControllerHelperTrait
+{
+	// define Auth Guard
+	protected $authGuard = 'web';
 
-	 // Element proceeding
-	 #public function proceed();
+	public function __construct()
+	{
+		$this->user = Auth::guard($this->authGuard)->user();
+	}
 
-	 // Element template
-	 public function template();
- }
+	// list available projects
+	public function index()
+	{
+		return $this->user->tests()->all();
+	}
+
+	// start or continue a test
+	public function initialize($pid)
+	{
+		if($this->user->tests()->instance($pid)->start())
+			return true;
+		else
+			return false;
+	}
+
+
+}

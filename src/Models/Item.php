@@ -31,7 +31,10 @@ class Item extends Model
     protected $table = 'items';
 
     // whitelist
-    protected $fillable = [];
+    protected $guarded = ['results', 'template', 'cssid', 'cssclass', 'name'];
+
+    // JSON protection
+    protected $hidden = ['template', 'validation', 'cssid', 'cssclass'];
 
     // page
     public function page()
@@ -57,20 +60,27 @@ class Item extends Model
 	 */
 
 	// element implementation
-	public function implement()
+	public function implement($data)
 	{
-		return $this->element()->implement();
+		return $this->element()->implement($data);
 	}
 
 	// element generation
 	public function generate($cache)
 	{
-		return $this->element->generate($cache);
+		$item = new Item;
+		$item->results = $this->element->generate($cache);
+		$item->name = 'item'.$this->id;
+		$item->template = $this->template;
+		$item->cssid = $this->cssId;
+		$item->cssclass = $this->cssClass;
+
+		return $item;
 	}
 
 	// element proceeding
-	public function proceed($request)
+	public function proceed($input = null)
 	{
-		return $this->element->proceed($request);
+		return $this->element->proceed($input);
 	}
 }

@@ -34,11 +34,19 @@ class CreatePageTable extends Migration
             $table->increments('id');
             $table->integer('test_id')->unsigned();
             $table->integer('position')->unsigned();
+            #$table->boolean('repeat')->default(false);
+            $table->integer('repetitions')->unsigned()->default(0);
+            $table->integer('repetition_interval')->unsigned()->nullable()->default(null);
             $table->boolean('recallable')->default(false);
             $table->boolean('returnable')->default(false);
+            $table->boolean('finish')->default(false);
+            $table->integer('time_limit')->unsigned()->nullable()->default(null);
             $table->string('template')->default('comproso::page');
             $table->string('operations_template')->default('comproso::pages.op_fwd')->nullable();
             $table->text('assets')->nullable()->default(null);
+            $table->boolean('default_assets')->default(true);
+            $table->boolean('group_generate')->default(false);
+            $table->boolean('group_proceed')->default(false);
             $table->timestamps();
         });
     }

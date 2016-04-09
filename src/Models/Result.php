@@ -23,6 +23,7 @@ namespace Comproso\Framework\Models;
 use Illuminate\Database\Eloquent\Model;
 
 use Comproso\Framework\Traits\ModelTrait;
+use Comproso\Framework\Traits\ModelHelperTrait;
 
 class Result extends Model
 {
@@ -51,4 +52,6 @@ class Result extends Model
     {
 	    return $this->belongsTo($this->TestModel);
     }
+
+
 }

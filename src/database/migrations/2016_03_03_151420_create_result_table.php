@@ -14,10 +14,14 @@ class CreateResultTable extends Migration
     {
         Schema::create('results', function (Blueprint $table) {
             $table->increments('id');
-            $table->integer('item_id')->unsigned();
-            $table->integer('test_id')->unsigned();
+            $table->integer('page_id')->unsigned();
+            $table->integer('test_repetition_counter')->unsigned();
             $table->integer('user_id')->unsigned();
-            $table->text('value');
+            $table->integer('page_repetition_counter');
+            $table->text('values');
+            $table->text('process_data');
+            $table->integer('server_time_delta')->unsigned();
+            $table->integer('user_time_delta')->unsigned();
             $table->timestamps();
         });
     }

@@ -21,10 +21,13 @@ Coming soon…
 Coming soon…
 
 ### Notice
-Be aware that Comproso uses *sessions*. You shouldn't use `cookie` as session driver option to avoid compromising possibilities. We recommend to use redis.
+Be aware that Comproso uses *sessions*.
+* You shouldn't use `cookie` as session driver option to avoid compromising possibilities.
+* The `database` session driver may have problems with CSRF protection.
+* We recommend to use `redis` or `memcached` for web based and `file` for laboratory use.
 
 ## License
-Copyright (C) 2016 Thiemo Kunze <hallo (at) wangaz (dot) com>
+Copyright (C) 2015-2016 Thiemo Kunze <kunze (at) wangaz (dot) com>
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
@@ -32,6 +35,6 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 
 You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-## Information for test authors
-Even if AGPL is forcing code forks also to publish under AGPL license, a test (or a project) is not: As tests are "only" linked to the framework, proprietary are imaginable. We strongly recommend a copyleft license, see [choosealicense.com](https://choosealicense.com) and [comproso.org/os](https://comproso.org/os) for further information. ** Be aware of ethical and legal issues due to test publishing! **
+## Information for test authors and developers
+Even if AGPL is forcing code forks also to publish under AGPL license, a test (or a project) is not: As tests are "only" linked to the framework, proprietary tests are imaginable. We strongly recommend a copyleft license, see [choosealicense.com](https://choosealicense.com) and [comproso.org/os](https://comproso.org/os) for further information. ** Be aware of ethical and legal issues due to test publishing! **
 

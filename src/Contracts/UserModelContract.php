@@ -20,17 +20,8 @@
 
  namespace Comproso\Framework\Contracts;
 
- interface ElementContract
+ interface UserModelContract
  {
-	 // Element implementation
-	 public function implement($data);
-
-	 // Element generation
-	 public function generate($cache = null);
-
-	 // Element proceeding
-	 #public function proceed();
-
-	 // Element template
-	 public function template();
+	 // test relation
+	 public function tests($data);
  }

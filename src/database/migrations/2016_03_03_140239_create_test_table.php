@@ -33,12 +33,14 @@ class CreateTestTable extends Migration
             $table->increments('id');
             $table->string('name');
             $table->enum('type', ['test', 'project']);
-            $table->integer('conf_repititions')->unsigned()->default(1);
-            $table->timestamp('conf_rep_interval');
-            $table->boolean('conf_continueable')->default(false);
-            $table->boolean('conf_reporting')->default(true);
-            $table->boolean('conf_caching')->default(true);
+            $table->integer('repetitions')->unsigned()->default(1);
+            $table->timestamp('repetitions_interval');
+			$table->timestamp('time_limit');
+            $table->boolean('continueable')->default(false);
+            $table->boolean('reporting')->default(true);
+            $table->boolean('caching')->default(true);
             $table->boolean('active')->default(false);
+            $table->text('assets')->nullable()->default(null);
             $table->timestamps();
         });
     }

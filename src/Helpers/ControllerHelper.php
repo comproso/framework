@@ -20,10 +20,10 @@
 
 namespace Comproso\Framework\Helpers;
 
-class ControllerHelper
+use Comproso\Framework\Traits\ModelTrait;
+use Comproso\Framework\Traits\ControllerHelperTrait;
+
+class ControllerHelper extends Controller
 {
-	public static function xyz()
-	{
-		//
-	}
+	use Modeltrait, ControllerHelperTrait;
 }

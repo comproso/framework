@@ -17,7 +17,9 @@ class CreateTestUserTable extends Migration
             $table->integer('test_id')->unsigned();
             $table->integer('user_id')->unsigned();
             $table->integer('page_id')->unsigned()->nullable()->default(null);
+            $table->integer('page_repetitions')->unsigned()->default(0);
             $table->integer('repetitions')->unsigned()->default(0);
+            $table->boolean('started')->default(false);
             $table->boolean('finished')->default(false);
             $table->timestamps();
         });

@@ -48,6 +48,11 @@ class ComprosoFrameworkServiceProvider extends ServiceProvider
 	    $this->publishes([
 	        __DIR__.'/resources/lang' => base_path('resources/lang/vendor/comproso/framework')
 	    ], "translations");
+
+	    // publish assets
+	    $this->publishes([
+	        __DIR__.'/resources/assets' => public_path('vendor/comproso/framework')
+	    ], "assets");
     }
 
     /**

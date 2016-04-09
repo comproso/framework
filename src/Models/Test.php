@@ -23,71 +23,149 @@ namespace Comproso\Framework\Models;
 use Illuminate\Database\Eloquent\Model;
 
 use Auth;
+use Carbon\Carbon;
+use Input;
+use Request;
+use Session;
 use Validator;
+use View;
 
 use Maatwebsite\Excel\Facades\Excel;
 
 use Comproso\Framework\Traits\ModelTrait;
+use Comproso\Framework\Traits\ModelHelperTrait;
 use Comproso\Framework\Models\Result;
 
 class Test extends Model
 {
-	use ModelTrait;
+	use ModelTrait, ModelHelperTrait;
 
-    // table
+	/**
+	 *	define database table.
+	 */
     protected $table = 'tests';
 
-    // whitelist
-    protected $fillable = [];
+    /**
+	 *	define mass assignable values.
+	 */
+    protected $fillable = ['name', 'active', 'type'];
 
-    // pages
+    // dates
+    protected $dates = ['time_limit', 'repetitions_interval'];
+
+    // json protections
+    #protected $hidden = ['results'];
+
+    /**
+	 *	define home uri.
+	 */
+    #protected $home = '/';
+
+
+	/*
+	|--------------------------------------------------------------------------
+	| Relations to other models
+	|--------------------------------------------------------------------------
+	|
+	| In this section, the relations to other Models of the framework, as well
+	| as the User Model are defined.
+	|
+	*/
+
+	/**
+	 *	Page Model.
+	 *
+	 *	@return objects
+	 */
     public function pages()
     {
 	    return $this->hasMany($this->PageModel);
     }
 
-    // items
+    /**
+	 *	Item Model.
+	 *
+	 *	@return objects
+	 */
     public function items()
     {
 	    return $this->hasManyThrough($this->ItemModel, $this->PageModel);
     }
 
-    // results
+    /**
+	 *	Result Model.
+	 *
+	 *	@return objects
+	 */
     public function results()
     {
-	    return $this->hasMany($this->ResultModel);
+	    return $this->hasManyThrough($this->ResultModel, $this->PageModel);
     }
 
-    // users
+    /**
+	 *	User Model.
+	 *
+	 *	@return objects
+	 */
     public function users()
     {
-	    return $this->belongsToMany($this->UserModel)->withPivot('page_id')->withPivot('repetitions')->withPivot('finished')->withTimestamps();
+	    return $this->belongsToMany($this->UserModel)
+	    			->withPivot('page_id')
+	    			->withPivot('repetitions')
+	    			->withPivot('page_repetitions')
+	    			->withPivot('started')
+	    			->withPivot('finished')
+	    			->withTimestamps();
     }
 
     /*
-	 *	special Test functionalities
-	 *
-	 */
+	|--------------------------------------------------------------------------
+	| Framework functions
+	|--------------------------------------------------------------------------
+	|
+	| In this section, special functionalities of the comproso/framework are
+	| defined.
+	|
+	*/
 
-	// integrate another test
-	public function integrate(Test $test, $pageStartPos = null)
+    /**
+	 *	Test integration.
+	 *
+	 *	@return boolean
+	 */
+	public function integrate(Test $test, $pageStartPos = null, $save = true)
 	{
+		// count pages
+		$count = $test->pages()->count();
+
 		if(is_null($pageStartPos))
-			$pageStartPos = $this->pages()->count() + 1;
+		{
+			// get last page
+			$lastPage = $this->pages()->where('finish', true)->orderBy('position', 'desc')->first();
+
+			// count current pages
+			$pageStartPos = $this->pages()->count();
+
+			if(!is_null($lastPage))
+			{
+				$lastPage->position += $count;
+				$lastPage->save();
+			}
+			else
+				$pageStartPos++;
+		}
 		else
 		{
-			if($this->pages()->count() > $pageStartPos)
+			if($this->pages()->count() >= $pageStartPos)
 			{
-				$count = $test->pages()->count();
-
 				// update pages
-				$this->pages()->orderBy('position')->where('position', '>', $pageStartPos)->update(['position' => 'position + '.$count]);
+				$this->pages()->orderBy('position')->where('position', '>=', $pageStartPos)->update(['position' => 'position + '.$count]);
 			}
 			else
 				$pageStartPos = 1;
 		}
 
-		$pages = $test->pages()->with('items')->orderBy('position')->get();
+		$pages = $test->pages()->where('finish', false)->with('items')->orderBy('position')->get();
 
 		// create pages
 		foreach($pages as $page)
@@ -115,11 +193,22 @@ class Test extends Model
 			$pageStartPos++;
 		}
 
-		return;
+		// add assets
+		$this->assets = $test->assets;
+
+		// save if allowed
+		if($save)
+			$this->save();
+
+		return true;
 	}
 
-	// import a test
-	public function import($fileWithPath, $delimiter = ',')
+	/**
+	 *	Test import.
+	 *
+	 *	@return boolean
+	 */
+	public function import($fileWithPath, $delimiter = ',', $save = true)
 	{
 		$rows = Excel::setDelimiter($delimiter)->load($fileWithPath)->get();
 
@@ -141,11 +230,11 @@ class Test extends Model
 					$params = [];
 
 					// input validation
-					$validator = Validator::make($row->toArray(), [
-						'page_recallable' => 'boolean',
-						'page_returnable' => 'boolean',
-						'page_template' => 'string',
-						'page_operations_template' => 'string',
+					/*$validator = Validator::make($row->toArray(), [
+						'recallable' => 'boolean',
+						'returnable' => 'boolean',
+						'template' => 'string',
+						'operations_template' => 'string',
 						'page_assets'	=> 'json'
 					]);
 
@@ -154,24 +243,46 @@ class Test extends Model
 					{
 						\Log::error($validator->errors());
 						return false;
+					}*/
+
+					// set page call settings
+					$page->recallable = (bool)$row->recallable;
+					$page->returnable = (bool)$row->returnable;
+
+					if(!empty($row->template))
+						$page->template = $row->template;
+
+				}
+				elseif(!empty($row->page_template))
+					$page->template = $row->page_template;
+
+				// set page assets
+				if(!empty($row->page_assets))
+				{
+					// get asses
+					$rowAssets = json_decode($row->page_assets);
+
+					// prepare arrays
+					$pageAssets = [];
+					$testAssets = [];
+
+					foreach($rowAssets as $rowAsset)
+					{
+						if((preg_match("/(\.js)$/i", $rowAsset)) AND (!in_array($rowAsset, $pageAssets)))
+							$pageAssets[] = $rowAsset;
+						elseif((preg_match("/(\.css)$/i", $rowAsset)) AND (!in_array($rowAsset, $testAssets)))
+							$testAssets[] = $rowAsset;
 					}
 
-					if(isset($row->page_recallable))
-						$page->recallable = $row->page_recallable;
-
-					if(isset($row->page_returnable))
-						$page->returnable = $row->page_returnable;
-
-					if(isset($row->page_template))
-						$page->template = $row->page_template;
-
-					if(isset($row->page_operations_template))
-						$page->operations_template = $row->page_operations_template;
-
-					if(isset($row->page_assets))
-						$page->assets = $row->page_assets;
+					$page->assets = (isset($pageAssets)) ? json_encode($pageAssets) : null;
 				}
 
+				// set operations template
+				if(!empty($row->operations_template))
+					$page->operations_template = $row->operations_template;
+
+				$page->repetitions = (isset($row->repetitions)) ? $row->repetitions : 0;
+				$page->repetition_interval = ($row->interval === null) null ? $row->interval;
 				$page->position = $pageCounter;
 				$this->pages()->save($page);
 
@@ -197,6 +308,12 @@ class Test extends Model
 
 			$item->element_id = $element->id;
 
+			$item->template = (empty($row->template)) ? $element->template() : $row->template;
+
+			$item->cssId = (empty($row->cssid)) ? null : $row->cssid;
+			$item->cssClass = (empty($row->cssclass)) ? null : $row->cssclass;
+			$item->validation = (empty($row->validation)) ? 'string' : $row->validation;
+
 			$items[] = $item;
 
 			$itemCounter++;
@@ -204,34 +321,404 @@ class Test extends Model
 
 		// save last page
 		$page->items()->saveMany($items);
-	}
 
-	// add new results
-	public function addResults($results)
-	{
-		$toSave = [];
+		// set test assets
+		$this->assets = (isset($testAssets)) ? json_encode($testAssets) : null;
 
-		foreach($results as $iid => $result)
-		{
-			$toSave[] = new Result([
-				'user_id'	=> Auth::user()->id,
-				'item_id'	=> $iid,
-				'value'		=> ((is_array($result)) OR (is_object($result))) ? json_encode($result): $result,
-			]);
-
-		}
-
-		// save results
-		$this->results()->saveMany($toSave);
+		// save if allowed
+		if($save)
+			$this->save();
 
 		return true;
 	}
 
-	/*
-	 *	test functionalities
+	/**
+	 *	Test data export.
+	 *
+	 *	@return file
 	 */
+	public function export()
+	{
+		//
+	}
 
-	// define type
+	/**
+	 *	Test content export.
+	 *
+	 *	@return file
+	 */
+	public function spawn()
+	{
+		//
+	}
+
+	/**
+	 *	Check for continued.
+	 *
+	 *	@return
+	 */
+	protected function isContinued()
+	{
+		// TBD
+
+		return false;
+	}
+
+	/**
+	 *	Check for continued.
+	 *
+	 *	@return
+	 */
+	public function initialize()
+	{
+		if($this->isAuthGuarded())
+		{
+			if($this->user->pivot->finished)
+				return new Page;
+
+			// get first page
+			$page = $this->pages()->orderBy('position')->with(['items' => function ($query) {
+				$query->orderBy('position');
+			}])->firstOrFail();
+
+			// prepare database
+			$this->users()->sync([$this->user->id => ['started' => true, 'page_id' => $page->id]], false);
+
+			// prepare cache
+			Session::put('test_id', $this->id);
+			Session::put('page_id', $page->id);
+			Session::put('user_id', $this->user->id);
+			Session::put('test_repetition', $this->user->pivot->repetitions);
+			Session::put('start_time_global', Carbon::now());
+			Session::put('start_time_page', Carbon::now());
+			Session::put('current_page', $page->id);
+			Session::put('page_visit_counter', 0);
+
+			return $page;
+		}
+
+		// prepare session
+		// TBD
+	}
+
+	/**
+	 *	Generate a test page.
+	 *
+	 *	@return object
+	 */
+	public function generate($pid = null)
+	{
+		// interrupt if no data available
+		if(is_null($this))
+			return null;
+
+		// display with user
+		if($this->isAuthGuarded())
+		{
+			// check if test is a valid project
+			if($this->type != "project")
+				return new Page;
+
+			// check if project is active
+			if(!$this->active)
+				return null;
+
+			// abort if finished
+			if($this->user->pivot->finished)
+				return null;
+
+			// start project
+			if(!$this->user->pivot->started)
+			{
+				// initialize project (DB and Session)
+				return $this->guarded()->initialize()->generate();
+			}
+
+			if(!$this->isContinued())
+			{
+				// do cache
+				$pageVisits = Session::pull('page_visit_counter');
+				Session::put('page_visit_counter', $pageVisits);
+				Session::put('start_time_page', Carbon::now());
+				Session::put('current_page', $this->user->pivot->page_id);
+
+				// get current stored page
+				return $this->pages()->orderBy('position')->with(['items' => function ($query) {
+					$query->orderBy('position');
+				}])->findOrFail($this->user->pivot->page_id)->generate();
+			}
+			elseif($this->continuable)
+			{
+				//
+			}
+			else
+			{
+				return null;
+			}
+		}
+
+		if(is_null($pid))
+		{
+			return $this->pages()->orderBy('position')->with(['items' => function ($query) {
+				$query->orderBy('position');
+			}])->firstOrFail()->generate();
+		}
+		else
+		{
+			return $this->pages()->orderBy('position')->with(['items' => function ($query) {
+				$query->orderBy('position');
+			}])->findOrFail($pid)->generate();
+		}
+	}
+
+	/**
+	 *	Proceed a test page.
+	 *
+	 *	@return object
+	 */
+	public function proceed($pid = null)
+	{
+		// validate request
+		if(!$this->validate())
+			return null;
+
+		// abort if limits are reached
+		if((Request::wantsJson()) AND (!$this->reachedLimits(true)) AND ($this->reachedLimits()))
+			return $this;
+
+		// proceed with user
+		if($this->isAuthGuarded())
+		{
+			// check if test starts
+			if(is_null($this->user->pivot->page_id))
+				return $this->initialize();
+
+			// compare session and DB
+			if(Session::get('page_id') != $this->user->pivot->page_id)
+				Session::put('page_id', $this->user->pivot->page_id);
+
+			if(Session::get('page_visit_counter') != $this->user->pivot->page_repetitions)
+				Session::put('page_visit_counter', $this->user->pivot->page_repetitions);
+
+			// get current page
+			$page = $this->pages()->with(['items' => function ($query) {
+				$query->orderBy('position');
+			}])->findOrFail($this->user->pivot->page_id);
+
+			if($page->proceed())
+			{
+				// prepare the page to display
+				// check if previous, current, or next page
+				if(Request::input('cctrl_prvs') == true)
+				{
+					// check if leaving could be allowed
+					if($page->returnable)
+					{
+						// get previous page candidate
+						$prvsPage = $page->previous()->first();
+
+						if((!is_null($prvsPage)) AND ($prvsPage->returnable))
+						{
+							// update page_id
+							$this->users()->updateExistingPivot($this->user->id, ['page_id' => $prvsPage->id]);
+							Session::put('page_id', $prvsPage->id);
+
+							// return previous page
+							return $prvsPage->generate();
+						}
+					}
+
+					// if current page can be recalled
+					#if($page->recallable)
+					#	return $page->generate();
+				}
+			}
+			else
+			{
+				// TBD
+
+				// check if errors can be corrected
+				if($page->recallable)
+				{
+					// update Session and DB
+					$pageCounter = Session::pull('page_visit_counter');
+					Session::put($pageCounter++);
+					$this->users()->updateExistingPivot($this->user->id, ['page_id' => $nxtPage->id, 'page_repetitions' => $this->user->pivot->page_repetitions++]);
+
+					return $page->generate()->withErrors();
+				}
+			}
+
+			// check if it is a repeatable page
+			if(($page->repetitions > 0) AND ($this->user->pivot->page_repetitions < $page->repetitions))
+			{
+				// update Session and DB
+				$pageCounter = Session::pull('page_visit_counter');
+				$pageCounter++;
+
+				Session::put('page_visit_counter', $pageCounter);
+				$this->users()->updateExistingPivot($this->user->id, ['page_repetitions' => $pageCounter]);
+
+				// return current page
+				return $page->generate();
+			}
+
+			// get next page
+			$nxtPage = $page->next()->first();
+
+			// finish if no next page exist
+			if($nxtPage === null)
+			{
+				// set test to finished
+				$this->users()->updateExistingPivot($this->user->id, ['finished' => true]);
+
+				// clear session
+				Session::flush();
+				Session::regenerate();
+
+				return new Page;
+			}
+
+			// update page_id
+			$this->users()->updateExistingPivot($this->user->id, ['page_id' => $nxtPage->id]);
+			Session::put('page_id', $nxtPage->id);
+
+			// return to next page
+			return $nxtPage->generate();
+		}
+		elseif(!is_null($pid))
+		{
+			// TBD manual page
+		}
+	}
+
+	/**
+	 *	create an automatic response.
+	 *
+	 *	@return Response
+	 */
+	public function respond()
+	{
+		// if finished
+		if(is_null($this))
+			return redirect('/');
+
+		// check if test limit(s) are reached
+		if($this->reachedLimits(true))
+		{
+			// update database
+			if($this->isAuthGuarded())
+			{
+				$this->users()->updateExistingPivot($this->user->id, ['finished' => true]);
+			}
+
+			// clear session
+			Session::flush();
+			Session::regenerate();
+
+			// redirect to home
+			return redirect('/');
+		}
+
+		// JSON vs. Blade view
+		if(Request::wantsJson())
+		{
+			// stay on page or leave
+			if($this->reachedLimits())
+			{
+				// get page
+				$page = $this->pages()->with(['items' => function ($query) {
+					$query->orderBy('position');
+				}])->findOrFail($this->user->pivot->page_id);
+
+				// get next page
+				$nxtPage = $page->next()->first();
+
+				// if no next Page is available
+				if(is_null($nxtPage))
+					return redirect('/');
+
+				return response()->json(['redirect' => true, 'token' => csrf_token(), 'assets' => $nxtPage->assets()]);
+			}
+			else
+				return response()->json($this->generate());
+		}
+		else
+			return $this->generate()->toView();
+	}
+
+	/**
+	 *	validate a request.
+	 *
+	 *	@return object
+	 */
+	public function reachedLimits($onlyTestLimits = false)
+	{
+		// abort of no object is given
+		if(is_null($this))
+			return null;
+
+		// check test time limit
+		if(($this->time_limit->getTimestamp() > 0) AND ((Carbon::now()->getTimestamp() - Session::get('start_time_global')->getTimestamp()) >= $this->time_limit->getTimestamp()))
+			return true;
+
+		// check page limits if allowed
+		if(!$onlyTestLimits)
+		{
+			// get current page
+			$page = $this->pages()->current();
+
+			// check page time limits
+			if((isset($page->time_limit)) AND ($page->time_limit > 0) AND ((Carbon::now()->getTimestamp() - Session::get('start_time_page')->getTimestamp()) >= $page->time_limit))
+				return true;
+
+			// check page call limits
+			if(($page->repetitions == 0) XOR ($page->repetitions < Session::get('page_visit_counter')))
+				return true;
+		}
+
+		// return false if every check is passed
+		return false;
+	}
+
+	/**
+	 *	start a page.
+	 *
+	 *	@return object
+	 */
+	public function start($template = 'comproso::site')
+	{
+		// get assets
+		$assets = json_decode($this->assets);
+
+		// get first page
+		$page = $this->pages()->orderBy('position')->with(['items' => function ($query) {
+			$query->orderBy('position');
+		}])->firstOrFail();
+
+		// add assets
+		$assets = array_merge($assets, json_decode($page->assets));
+
+		// return view
+		return View::make($template, ['assets' => $assets])->render();
+	}
+
+	/**
+	 *	validate a request.
+	 *
+	 *	@return object
+	 */
+	public function validate()
+	{
+		// TBD
+		return true;
+	}
+
+	/**
+	 *	get a specific testing type.
+	 *
+	 *	@return result
+	 */
 	public function scopeOfType($query, $type)
 	{
 		if(!in_array($type, ['test', 'project']))
@@ -240,37 +727,13 @@ class Test extends Model
 		return $query->where('type', $type);
 	}
 
-	// get active
+	/**
+	 *	get active tests.
+	 *
+	 *	@return result
+	 */
 	public function scopeIsActive($query)
 	{
 		return $query->where('active', true);
-	}
-
-	// project is continuable
-	public function scopeIsContinueable($query)
-	{
-		return $query->where('conf_continueable', true);
-	}
-
-	/*
-	 *		page functionalities
-	 */
-
-	// get current/present page (or first page)
-	public function currentPage()
-	{
-		return $this->pages()->present();
-	}
-
-	// get next page
-	public function nextPage()
-	{
-		return $this->pages()->following()->first();
-	}
-
-	// get previous page
-	public function previousPage()
-	{
-		return $this->pages()->previous()->first();
 	}
 }
