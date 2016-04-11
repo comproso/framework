@@ -282,7 +282,7 @@ class Test extends Model
 					$page->operations_template = $row->operations_template;
 
 				$page->repetitions = (isset($row->repetitions)) ? $row->repetitions : 0;
-				$page->repetition_interval = ($row->interval === null) null ? $row->interval;
+				$page->repetition_interval = ($row->interval === null) ? null : $row->interval;
 				$page->position = $pageCounter;
 				$this->pages()->save($page);
 
