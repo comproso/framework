@@ -246,8 +246,8 @@ class Test extends Model
 					}*/
 
 					// set page call settings
-					$page->recallable = (bool)$row->recallable;
-					$page->returnable = (bool)$row->returnable;
+					$page->recallable = boolval($row->recallable);
+					$page->returnable = boolval($row->returnable);
 
 					if(!empty($row->template))
 						$page->template = $row->template;
@@ -509,7 +509,7 @@ class Test extends Model
 			{
 				// prepare the page to display
 				// check if previous, current, or next page
-				if(Request::input('cctrl_prvs') == true)
+				if(boolval(Request::input('cctrl_prvs')) == true)
 				{
 					// check if leaving could be allowed
 					if($page->returnable)

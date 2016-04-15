@@ -60,7 +60,8 @@ function sendRequest(requestDataType, assets)
 				// proceed json vs html data
 				if(requestDataType == "html")
 				{
-					$('body#comproso').html(response).trigger("updated");
+					$('body#comproso').html(response);
+					$(document).triggerHandler("updated");
 				}
 
 				if(requestDataType == "json")
@@ -92,10 +93,12 @@ function sendRequest(requestDataType, assets)
 								element.attr(accessor, result.results[accessor]);
 							});
 
-							element.trigger("updated");
+							element.triggerHandler("updated");
 						}
 					});
 				}
+
+				$(document).triggerHandler('ajaxProceeded');
 			}
 			else
 			{
@@ -121,11 +124,6 @@ function sendRequest(requestDataType, assets)
 		complete: function () {
 			// set start time
 			$('form.cpage input[name="ccusr_tstrt"]').val(Date.now());
-
-			if(requestDataType == "html")
-			{
-				$('body#comproso').trigger("pageupdate");
-			}
 		},
 		done: function () {
 			// update transaction time
@@ -140,37 +138,36 @@ function sendRequest(requestDataType, assets)
 	});
 }
 
-$('body#comproso').on("pageupdate", function () {
-
-});
-
-$(document).ajaxComplete(function () {
-	// reset timers
-	if(typeof tvlId !== 'undefined')
-	{
-		//clearTimeout(tvlId);
-	}
-
-	if(typeof tlmtId !== 'undefined')
-	{
-		//clearTimeout(tlmtId);
-	}
-
-	// timeout
-	if($('form.cpage input[name="ccfg_tlmt"]').val() > 0)
-	{
-		// count down
-		//var tlmtId = setTimeout(sendRequest(), ($('form.cpage input[name="ccfg_tlmt"]').val() * 1000));
-	}
-
-	// other send modus
+$(document).on("ajaxProceeded", function () {
+	// auto send mode
 	if($('form.cpage .cnav').length === 0)
 	{
 		// prt
 		if($('form.cpage input[name="ccfg_tvl"]').val() > 0)
 		{
-			//var tvlId = setTimeout(sendRequest(), ($('form.cpage input[name="ccfg_tvl"]').val() * 1000));
+			var tvlId = setTimeout(sendRequest, ($('form.cpage input[name="ccfg_tvl"]').val() * 1000));
 		}
+	}
+});
+
+$(document).on("updated", function () {
+	// reset data
+	if(typeof tlmtId !== 'undefined')
+	{
+		clearTimeout(tlmtId);
+	}
+
+	if(typeof tvlId !== 'undefined')
+	{
+		clearTimeout(tvlId);
+	}
+
+
+	// timout
+	if($('form.cpage input[name="ccfg_tlmt"]').val() > 0)
+	{
+		// count down
+		var tlmtId = setTimeout(sendRequest, ($('form.cpage input[name="ccfg_tlmt"]').val() * 1000));
 	}
 
 	// navigate
