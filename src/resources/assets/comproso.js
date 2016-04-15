@@ -121,6 +121,11 @@ function sendRequest(requestDataType, assets)
 		complete: function () {
 			// set start time
 			$('form.cpage input[name="ccusr_tstrt"]').val(Date.now());
+
+			if(requestDataType == "html")
+			{
+				$('body#comproso').trigger("pageupdate");
+			}
 		},
 		done: function () {
 			// update transaction time
@@ -135,14 +140,27 @@ function sendRequest(requestDataType, assets)
 	});
 }
 
+$('body#comproso').on("pageupdate", function () {
+
+});
+
 $(document).ajaxComplete(function () {
-	// response functions
+	// reset timers
+	if(typeof tvlId !== 'undefined')
+	{
+		//clearTimeout(tvlId);
+	}
+
+	if(typeof tlmtId !== 'undefined')
+	{
+		//clearTimeout(tlmtId);
+	}
 
 	// timeout
 	if($('form.cpage input[name="ccfg_tlmt"]').val() > 0)
 	{
 		// count down
-		setTimeout(sendRequest(), ($('form.cpage input[name="ccfg_tlmt"]').val() * 1000));
+		//var tlmtId = setTimeout(sendRequest(), ($('form.cpage input[name="ccfg_tlmt"]').val() * 1000));
 	}
 
 	// other send modus
@@ -151,7 +169,7 @@ $(document).ajaxComplete(function () {
 		// prt
 		if($('form.cpage input[name="ccfg_tvl"]').val() > 0)
 		{
-			setTimeout(sendRequest(), ($('form.cpage input[name="ccfg_tvl"]').val() * 1000));
+			//var tvlId = setTimeout(sendRequest(), ($('form.cpage input[name="ccfg_tvl"]').val() * 1000));
 		}
 	}
 
@@ -160,11 +178,11 @@ $(document).ajaxComplete(function () {
 		// set direction
 		if($(this).hasClass('bwd'))
 		{
-			$('form.cpage input[name="cctrl_prvs"]').val(true);
+			$('form.cpage input[name="cctrl_prvs"]').val(1);
 		}
 		else
 		{
-			$('form.cpage input[name="cctrl_prvs"]').val(false);
+			$('form.cpage input[name="cctrl_prvs"]').val(0);
 		}
 
 		// set end time

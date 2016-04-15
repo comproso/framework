@@ -260,7 +260,7 @@ class Page extends Model
 			'time_limit'	=> $this->time_limit,
 			'interval'		=> $this->interval,
 			'results'		=> $views,
-			'round'			=> Session::get('page_visit_counter'),
+			'round'			=> intval(Session::get('page_visit_counter')),
 			#'nav'			=> $this->nav,
 			#'assets'		=> $this->assets,
 		])->render();
@@ -291,6 +291,9 @@ class Page extends Model
 	 */
 	public function assets()
 	{
+		if(is_null($this->assets))
+			return [];
+
 		// get assets
 		$assets = json_decode($this->assets);
 

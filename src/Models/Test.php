@@ -279,10 +279,10 @@ class Test extends Model
 
 				// set operations template
 				if(!empty($row->operations_template))
-					$page->operations_template = $row->operations_template;
+					$page->operations_template = ($row->operations_template == "null") ? null : $row->operations_template;
 
-				$page->repetitions = (isset($row->repetitions)) ? $row->repetitions : 0;
-				$page->repetition_interval = ($row->interval === null) ? null : $row->interval;
+				$page->repetitions = (is_null($row->repetitions)) ? 0 : $row->repetitions;
+				$page->repetition_interval = (is_null($row->interval)) ? null : $row->interval;
 				$page->position = $pageCounter;
 				$this->pages()->save($page);
 
@@ -555,6 +555,8 @@ class Test extends Model
 				// update Session and DB
 				$pageCounter = Session::pull('page_visit_counter');
 				$pageCounter++;
+
+				#\Log::debug($page->repetitions);
 
 				Session::put('page_visit_counter', $pageCounter);
 				$this->users()->updateExistingPivot($this->user->id, ['page_repetitions' => $pageCounter]);
