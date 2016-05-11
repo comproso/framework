@@ -1,0 +1,3 @@
+<div class="cnav ui buttons">
+	<input type="reset" class="rst ui primary button" value="{{ trans('Reset') }}">
+</div>
