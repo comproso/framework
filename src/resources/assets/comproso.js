@@ -48,7 +48,6 @@ function sendRequest(requestDataType, assets)
 		headers: {
 			'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
 		},
-		cache: false,
 		beforeSend: function () {
 			// set end time
 			$('form.cpage input[name="ccusr_nd"]').val(Date.now());
@@ -138,6 +137,31 @@ function sendRequest(requestDataType, assets)
 	});
 }
 
+// store process data
+function storeProcessDate(element) {
+	actions = JSON.parse($('form.cpage input[name="ccusr_ctns"]').val());
+
+	// store new actions
+	newactions = {};
+
+	if(element === undefined)
+	{
+		newactions.item = $(this).attr('name');
+		newactions.value = $(this).attr('value');
+	}
+	else
+	{
+		newactions.item = "reset";
+		newactions.value = true;
+	}
+
+	newactions.tstmp = Date.now();
+
+	actions.push(newactions);
+
+	$('form.cpage input[name="ccusr_ctns"]').val(JSON.stringify(actions));
+}
+
 $(document).on("ajaxProceeded", function () {
 	// auto send mode
 	if($('form.cpage .cnav').length === 0)
@@ -170,37 +194,33 @@ $(document).on("updated", function () {
 		var tlmtId = setTimeout(sendRequest, ($('form.cpage input[name="ccfg_tlmt"]').val() * 1000));
 	}
 
-	// navigate
+	// navigation
 	$('form.cpage .cnav input[type="button"]').click(function () {
-		// set direction
-		if($(this).hasClass('bwd'))
+		// check if reset
+		if($(this).hasClass('rst'))
 		{
-			$('form.cpage input[name="cctrl_prvs"]').val(1);
+			$('form.cpage').trigger('reset');
 		}
 		else
 		{
-			$('form.cpage input[name="cctrl_prvs"]').val(0);
+			// set direction
+			if($(this).hasClass('bwd'))
+			{
+				$('form.cpage input[name="cctrl_prvs"]').val(1);
+			}
+			else
+			{
+				$('form.cpage input[name="cctrl_prvs"]').val(0);
+			}
+
+			// set end time
+			$('form.cpage input[name="ccusr_nd"]').val(Date.now());
+
+			// send form
+			sendRequest();
 		}
-
-		// set end time
-		$('form.cpage input[name="ccusr_nd"]').val(Date.now());
-
-		// send form
-		sendRequest();
 	});
 
 	// record process data on form fields
-	$('form.cpage *:not(.notrace) *[name^="item"]:not(.notrace)').change(function () {
-		actions = JSON.parse($('form.cpage input[name="ccusr_ctns"]').val());
-
-		// store new actions
-		newactions = {};
-		newactions.item = $(this).attr('name');
-		newactions.value = $(this).attr('value');
-		newactions.tstmp = Date.now();
-
-		actions.push(newactions);
-
-		$('form.cpage input[name="ccusr_ctns"]').val(JSON.stringify(actions));
-	});
+	$('form.cpage *:not(.notrace) *[name^="item"]:not(.notrace)').change(storeProcessDate());
 });
