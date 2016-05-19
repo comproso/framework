@@ -225,7 +225,7 @@ class Test extends Model
 
 				$page = new Page;
 
-				if($row->model == 'Comproso\Framework\Models\Page')
+				if(trim($row->model) == 'Comproso\Framework\Models\Page')
 				{
 					$params = [];
 
@@ -249,18 +249,18 @@ class Test extends Model
 					$page->recallable = boolval($row->recallable);
 					$page->returnable = boolval($row->returnable);
 
-					if(!empty($row->template))
-						$page->template = $row->template;
+					if(!empty(trim($row->template)))
+						$page->template = trim($row->template);
 
 				}
-				elseif(!empty($row->page_template))
-					$page->template = $row->page_template;
+				elseif(!empty(trim($row->page_template)))
+					$page->template = trim($row->page_template);
 
 				// set page assets
-				if(!empty($row->page_assets))
+				if(!empty(trim($row->page_assets)))
 				{
 					// get asses
-					$rowAssets = json_decode($row->page_assets);
+					$rowAssets = json_decode(trim($row->page_assets));
 
 					// prepare arrays
 					$pageAssets = [];
@@ -278,8 +278,8 @@ class Test extends Model
 				}
 
 				// set operations template
-				if(!empty($row->operations_template))
-					$page->operations_template = ($row->operations_template == "null") ? null : $row->operations_template;
+				if(!empty(trim($row->operations_template)))
+					$page->operations_template = ($row->operations_template == "null") ? null : trim($row->operations_template);
 
 				$page->repetitions = (is_null($row->repetitions)) ? 0 : $row->repetitions;
 				$page->repetition_interval = (is_null($row->interval)) ? null : $row->interval;
@@ -292,27 +292,28 @@ class Test extends Model
 				$pageCounter++;
 				$itemCounter = 1;
 
-				if($row->model == 'Comproso\Framework\Models\Page')
+				if(trim($row->model) == 'Comproso\Framework\Models\Page')
 					continue;
 			}
 
 			// create Item
 			$item = new Item;
 			$item->position = $itemCounter;
-			$item->element_type = $row->model;
+			$item->element_type = trim($row->model);
 
 			// create Element
+			$row->model = trim($row->model);
 			$element = new $row->model;
 			$element->implement($row);
 			$element->save();
 
 			$item->element_id = $element->id;
 
-			$item->template = (empty($row->template)) ? $element->template() : $row->template;
+			$item->template = (empty(trim($row->template))) ? $element->template() : trim($row->template);
 
-			$item->cssId = (empty($row->cssid)) ? null : $row->cssid;
-			$item->cssClass = (empty($row->cssclass)) ? null : $row->cssclass;
-			$item->validation = (empty($row->validation)) ? 'string' : $row->validation;
+			$item->cssId = (empty(trim($row->cssid))) ? null : trim($row->cssid);
+			$item->cssClass = (empty($row->cssclass)) ? null : trim($row->cssclass);
+			$item->validation = (empty(trim($row->validation))) ? 'string' : trim($row->validation);
 
 			$items[] = $item;
 
