@@ -32,7 +32,7 @@ class ComprosoFrameworkServiceProvider extends ServiceProvider
     public function boot()
     {
 	    $this->loadViewsFrom(base_path('resources/views/vendor/comproso/framework'), 'comproso');
-	    $this->loadTranslationsFrom(base_path('resources/lang/vendor/comproso/framework'), 'comproso');
+	    $this->loadTranslationsFrom(base_path('resources/lang/vendor/comproso'), 'comproso');
 
         // publish migrations
         $this->publishes([
@@ -46,7 +46,7 @@ class ComprosoFrameworkServiceProvider extends ServiceProvider
 
 	    // publish lang
 	    $this->publishes([
-	        __DIR__.'/resources/lang' => base_path('resources/lang/vendor/comproso/framework')
+	        __DIR__.'/resources/lang' => base_path('resources/lang/vendor/comproso')
 	    ], "translations");
 
 	    // publish assets
