@@ -139,18 +139,18 @@ function sendRequest(requestDataType, assets)
 
 // store process data
 function storeProcessDate(element) {
+	if((element === undefined) && (!$(this).attr('name')))
+		return;
+
 	actions = JSON.parse($('form.cpage input[name="ccusr_ctns"]').val());
 
 	// store new actions
 	newactions = {};
 
-	if(element === undefined)
+	if(element !== undefined)
 	{
-		if($(this).is('[name]'))
-		{
-			newactions.item = $(this).attr('name');
-			newactions.value = $(this).attr('value');
-		}
+		newactions.item = $(this).attr('name');
+		newactions.value = $(this).attr('value');
 	}
 	else
 	{
