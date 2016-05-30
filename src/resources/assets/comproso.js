@@ -146,8 +146,11 @@ function storeProcessDate(element) {
 
 	if(element === undefined)
 	{
-		newactions.item = $(this).attr('name');
-		newactions.value = $(this).attr('value');
+		if($(this).is('[name]'))
+		{
+			newactions.item = $(this).attr('name');
+			newactions.value = $(this).attr('value');
+		}
 	}
 	else
 	{
