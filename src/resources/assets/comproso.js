@@ -138,7 +138,7 @@ function sendRequest(requestDataType, assets)
 }
 
 // store process data
-function storeProcessDate(element) {
+function storeProcessData(element) {
 	if((element === undefined) && (!$(this).attr('name')))
 		return;
 
@@ -147,7 +147,7 @@ function storeProcessDate(element) {
 	// store new actions
 	newactions = {};
 
-	if(element !== undefined)
+	if(element === undefined)
 	{
 		newactions.item = $(this).attr('name');
 		newactions.value = $(this).attr('value');
@@ -225,5 +225,5 @@ $(document).on("updated", function () {
 	});
 
 	// record process data on form fields
-	$('form.cpage *:not(.notrace) *[name^="item"]:not(.notrace)').change(storeProcessDate());
+	$('form.cpage *:not(.notrace) *[name^="item"]:not(.notrace)').change(storeProcessData());
 });
