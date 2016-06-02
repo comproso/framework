@@ -141,12 +141,12 @@ class Test extends Model
 		if(is_null($pageStartPos))
 		{
 			// get last page
-			$lastPage = $this->pages()->where('finish', true)->orderBy('position', 'desc')->first();
+			$lastPage = $this->pages()->orderBy('position', 'desc')->first();
 
 			// count current pages
-			$pageStartPos = $this->pages()->count();
+			$pageStartPos = $this->pages()->get()->count();
 
-			if(!is_null($lastPage))
+			if($lastPage->finish)
 			{
 				$lastPage->position += $count;
 				$lastPage->save();
