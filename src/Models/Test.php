@@ -146,7 +146,11 @@ class Test extends Model
 			// count current pages
 			$pageStartPos = $this->pages()->get()->count();
 
-			if($lastPage->finish)
+			if(is_null($lastPage))
+			{
+				$pageStartPos = 1;
+			}
+			elseif($lastPage->finish)
 			{
 				$lastPage->position += $count;
 				$lastPage->save();
