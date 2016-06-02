@@ -121,6 +121,9 @@ function sendRequest(requestDataType, assets)
 			}
 		},
 		complete: function () {
+			// disable
+			$('form.cpage .cnav input[type="button"]').prop('disabled', false);
+
 			// set start time
 			$('form.cpage input[name="ccusr_tstrt"]').val(Date.now());
 		},
@@ -199,10 +202,16 @@ $(document).on("updated", function () {
 
 	// navigation
 	$('form.cpage .cnav input[type="button"]').click(function () {
+		// disable
+		$('form.cpage .cnav input[type="button"]').prop('disabled', true);
+
 		// check if reset
 		if($(this).hasClass('rst'))
 		{
 			$('form.cpage').trigger('reset');
+
+			// enable
+			$('form.cpage .cnav input[type="button"]').prop('disabled', false);
 		}
 		else
 		{
