@@ -176,6 +176,7 @@ class Test extends Model
 		{
 			$newPage = $page->replicate(['id', 'test_id']);
 			$newPage->test_id = $this->id;
+			$newPage->position = $pageStartPos;
 			$newPage->save();
 
 			$items = [];
