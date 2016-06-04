@@ -208,7 +208,7 @@ $(document).on("updated", function () {
 		// check if reset
 		if($(this).hasClass('rst'))
 		{
-			$('form.cpage').trigger('reset');
+			$('form.cpage').reset();
 
 			// enable
 			$('form.cpage .cnav input[type="button"]').prop('disabled', false);
