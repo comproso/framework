@@ -202,19 +202,17 @@ $(document).on("updated", function () {
 
 	// navigation
 	$('form.cpage .cnav input[type="button"]').click(function () {
-		// disable
-		$('form.cpage .cnav input[type="button"]').prop('disabled', true);
 
 		// check if reset
 		if($(this).hasClass('rst'))
 		{
-			$('form.cpage').reset();
-
-			// enable
-			$('form.cpage .cnav input[type="button"]').prop('disabled', false);
+			$('form.cpage').trigger('reset');
 		}
 		else
 		{
+			// disable
+			$('form.cpage .cnav input[type="button"]').prop('disabled', true);
+
 			// set direction
 			if($(this).hasClass('bwd'))
 			{
