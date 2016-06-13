@@ -263,24 +263,7 @@ class Test extends Model
 
 				// set page assets
 				if(!empty(trim($row->page_assets)))
-				{
-					// get asses
-					$rowAssets = json_decode(trim($row->page_assets));
-
-					// prepare arrays
-					$pageAssets = [];
-					$testAssets = [];
-
-					foreach($rowAssets as $rowAsset)
-					{
-						if((preg_match("/(\.js)$/i", $rowAsset)) AND (!in_array($rowAsset, $pageAssets)))
-							$pageAssets[] = $rowAsset;
-						elseif((preg_match("/(\.css)$/i", $rowAsset)) AND (!in_array($rowAsset, $testAssets)))
-							$testAssets[] = $rowAsset;
-					}
-
-					$page->assets = (isset($pageAssets)) ? json_encode($pageAssets) : null;
-				}
+					$page->assets = json_encode(json_decode(trim($row->page_assets)));
 
 				// set operations template
 				if(!empty(trim($row->operations_template)))
@@ -329,7 +312,7 @@ class Test extends Model
 		$page->items()->saveMany($items);
 
 		// set test assets
-		$this->assets = (isset($testAssets)) ? json_encode($testAssets) : null;
+		//$this->assets = (isset($testAssets)) ? json_encode($testAssets) : null;
 
 		// save if allowed
 		if($save)
@@ -646,7 +629,7 @@ class Test extends Model
 				if(is_null($nxtPage))
 					return redirect('/');
 
-				return response()->json(['redirect' => true, 'token' => csrf_token(), 'assets' => $nxtPage->assets()]);
+				return response()->json(['redirect' => true, 'token' => csrf_token(), /*'assets' => $nxtPage->assets()*/]);
 			}
 			else
 				return response()->json($this->generate());

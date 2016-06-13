@@ -107,10 +107,10 @@ class Page extends Model
 		if($this->default_assets)
 		{
 			// debug vs production files
-			if(getenv('APP_DEBUG') == true)
+			/*if(getenv('APP_DEBUG') == true)*/
 				array_push($assets, "vendor/comproso/framework/comproso.js");
-			else
-				array_push($assets, "vendor/comproso/framework/comproso.min.js");
+			/*else
+				array_push($assets, "vendor/comproso/framework/comproso.min.js");*/
 		}
 
 		// prepare page and return Page object
@@ -262,7 +262,7 @@ class Page extends Model
 			'results'		=> $views,
 			'round'			=> intval(Session::get('page_visit_counter')),
 			#'nav'			=> $this->nav,
-			#'assets'		=> $this->assets,
+			'assets'		=> $this->assets,
 		])->render();
 	}
 

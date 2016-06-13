@@ -1,30 +1,6 @@
-function dump(arr,level) {
-	var dumped_text = "";
-	if(!level) level = 0;
+//var version = "0.4.2";
 
-	//The padding given at the beginning of the line.
-	var level_padding = "";
-	for(var j=0;j<level+1;j++) level_padding += "    ";
-
-	if(typeof(arr) == 'object') { //Array/Hashes/Objects
-		for(var item in arr) {
-			var value = arr[item];
-
-			if(typeof(value) == 'object') { //If it is an array,
-				dumped_text += level_padding + "'" + item + "' ...\n";
-				dumped_text += dump(value,level+1);
-			} else {
-				dumped_text += level_padding + "'" + item + "' => \"" + value + "\"\n";
-			}
-		}
-	} else { //Stings/Chars/Numbers etc.
-		dumped_text = "===>"+arr+"<===("+typeof(arr)+")";
-	}
-	return dumped_text;
-}
-
-
-function sendRequest(requestDataType, assets)
+function sendRequest(requestDataType)
 {
 	// set default
 	if(requestDataType === undefined)
@@ -32,38 +8,31 @@ function sendRequest(requestDataType, assets)
 		requestDataType = "json";
 	}
 
-	// set default
-	if(assets === undefined)
+	// in case of HTML
+	if(requestDataType == "html")
 	{
-		assets = null;
+		$('form.cpage').submit();
 	}
 
-	// define data type
-	$.ajax({
-		dataType: requestDataType,
-		data: $('form.cpage input, form.cpage select, form.cpage textarea').serialize(),
-		cache: false,
-		timeout: 30000,
-		method: "post",
-		headers: {
-			'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-		},
-		beforeSend: function () {
-			// set end time
-			$('form.cpage input[name="ccusr_nd"]').val(Date.now());
-		},
-		success: function (response) {
-			// check for redirection request by server
-			if(response.redirect === undefined)
-			{
-				// proceed json vs html data
-				if(requestDataType == "html")
-				{
-					$('body#comproso').html(response);
-					$(document).triggerHandler("updated");
-				}
-
-				if(requestDataType == "json")
+	if(requestDataType === "json")
+	{
+		// define data type
+		$.ajax($('form.cpage').attr('action'), {
+			dataType: requestDataType,
+			data: $('form.cpage input, form.cpage select, form.cpage textarea').serialize(),
+			cache: false,
+			timeout: 30000,
+			method: "post",
+			headers: {
+				'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+			},
+			beforeSend: function () {
+				// set end time
+				$('form.cpage input[name="ccusr_nd"]').val(Date.now());
+			},
+			success: function (response) {
+				// check for redirection request by server
+				if(response.redirect === undefined)
 				{
 					// update comproso items
 					$('form.cpage input[name="ccfg_tmlt"]').val(response.time_limit);
@@ -95,49 +64,37 @@ function sendRequest(requestDataType, assets)
 							element.triggerHandler("updated");
 						}
 					});
+
+					$(document).triggerHandler('jsonResponse');
+
+
+				}
+				else
+				{
+					sendRequest("html");
 				}
 
 				$(document).triggerHandler('ajaxProceeded');
+			},
+			complete: function () {
+				// disable
+				$('form.cpage .cnav input[type="button"]').prop('disabled', false);
+
+				// set start time
+				$('form.cpage input[name="ccusr_tstrt"]').val(Date.now());
+			},
+			done: function () {
+				// update transaction time
+				$('form.cpage input[name="ccusr_rt"]').val((Date.now() - $('form.cpage input[name="ccusr_nd"]').val()));
+			},
+			error: function (xhr, status, errorThrown) {
+				console.log( "Error: " + errorThrown );
+				console.log( "Status: " + status );
+				console.dir( xhr );
+				document.write(xhr.responseText);
 			}
-			else
-			{
-				// set token
-				$('meta[name="csrf-token"]').attr('content', response.token);
-
-				// get assets
-				if(response.assets !== null)
-				{
-					$.ajaxSetup({
-						cache: true
-					});
-
-					$.each(response.assets, function (key, asset) {
-						$.getScript(asset);
-					});
-				}
-
-				// resend request
-				sendRequest("html");
-			}
-		},
-		complete: function () {
-			// disable
-			$('form.cpage .cnav input[type="button"]').prop('disabled', false);
-
-			// set start time
-			$('form.cpage input[name="ccusr_tstrt"]').val(Date.now());
-		},
-		done: function () {
-			// update transaction time
-			$('form.cpage input[name="ccusr_rt"]').val((Date.now() - $('form.cpage input[name="ccusr_nd"]').val()));
-		},
-		error: function (xhr, status, errorThrown) {
-			console.log( "Error: " + errorThrown );
-			console.log( "Status: " + status );
-			console.dir( xhr );
-			document.write(xhr.responseText);
-		}
-	});
+		});
+	}
 }
 
 // store process data
@@ -180,9 +137,9 @@ $(document).on("ajaxProceeded", function () {
 	}
 });
 
-$(document).on("updated", function () {
+$(document).on("ready", function () {
 	// reset data
-	if(typeof tlmtId !== 'undefined')
+	/*if(typeof tlmtId !== 'undefined')
 	{
 		clearTimeout(tlmtId);
 	}
@@ -190,7 +147,9 @@ $(document).on("updated", function () {
 	if(typeof tvlId !== 'undefined')
 	{
 		clearTimeout(tvlId);
-	}
+	}*/
+
+	//console.log(version);
 
 
 	// timout
@@ -201,7 +160,7 @@ $(document).on("updated", function () {
 	}
 
 	// navigation
-	$('form.cpage .cnav input[type="button"]').click(function () {
+	$('form.cpage .cnav input[type="button"]:not(.inactive)').click(function () {
 
 		// check if reset
 		if($(this).hasClass('rst'))
@@ -221,6 +180,7 @@ $(document).on("updated", function () {
 			else
 			{
 				$('form.cpage input[name="cctrl_prvs"]').val(0);
+
 			}
 
 			// set end time
