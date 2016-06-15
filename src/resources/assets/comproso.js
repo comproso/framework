@@ -1,4 +1,4 @@
-//var version = "0.4.2";
+var version = "0.4.5";
 
 function sendRequest(requestDataType)
 {
@@ -71,6 +71,14 @@ function sendRequest(requestDataType)
 				}
 				else
 				{
+					console.log('1');
+					// reset data
+					if(typeof tInt !== 'undefined')
+					{
+						console.log('3');
+						clearTimeout(tInt);
+					}
+
 					sendRequest("html");
 				}
 
@@ -139,24 +147,25 @@ $(document).on("ajaxProceeded", function () {
 
 $(document).on("ready", function () {
 	// reset data
-	/*if(typeof tlmtId !== 'undefined')
+	if(typeof tInt !== 'undefined')
 	{
-		clearTimeout(tlmtId);
+		console.log('2');
+		clearTimeout(tInt);
 	}
 
-	if(typeof tvlId !== 'undefined')
+	// pseudorealtime
+	if($('form.cpage .cnav').length === 0)
 	{
-		clearTimeout(tvlId);
-	}*/
-
-	//console.log(version);
-
-
-	// timout
-	if($('form.cpage input[name="ccfg_tlmt"]').val() > 0)
-	{
-		// count down
-		var tlmtId = setTimeout(sendRequest, ($('form.cpage input[name="ccfg_tlmt"]').val() * 1000));
+		// timeout
+		if($('form.cpage input[name="ccfg_tvl"]').val() > 5)
+		{
+			// count down
+			var tInt = setTimeout(sendRequest, ($('form.cpage input[name="ccfg_tvl"]').val() * 1000));
+		}
+		else
+		{
+			var tInt = setTimeout(sendRequest, 5000);
+		}
 	}
 
 	// navigation

@@ -83,4 +83,11 @@ class Item extends Model
 	{
 		return $this->element->proceed($input);
 	}
+
+	// element finish
+	public function finish()
+	{
+		if(method_exists($this->element, 'finish'))
+			$this->element->finish();
+	}
 }

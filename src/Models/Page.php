@@ -337,13 +337,24 @@ class Page extends Model
 	public function finish()
 	{
 		// update current page
-		Session::put('current_page', $this->next()->first()->id);
+		/*Session::put('current_page', $this->next()->first()->id);
 		Session::put('page_visit_counter', 0);
 
 		// if user is authenticate
 		if($this->isAuthGuarded())
 		{
 
+		}*/
+
+		// get items
+		if(isset($this->items))
+			$items = $this->items;
+		else
+			$items = $this->items()->orderBy('position')->get();
+
+		foreach($items as $item)
+		{
+			$item->finish();
 		}
 	}
 
@@ -364,8 +375,8 @@ class Page extends Model
 	 */
 	public function scopeCurrent($query)
 	{
-		if(Session::has('current_page'))
-			return $query->find(Session::get('current_page'));
+		if(Session::has('page_id'))
+			return $query->find(Session::get('page_id'));
 		else
 			return $query->ofPosition()->first();
 	}

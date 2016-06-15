@@ -271,6 +271,7 @@ class Test extends Model
 
 				$page->repetitions = (is_null($row->repetitions)) ? 0 : $row->repetitions;
 				$page->repetition_interval = (is_null($row->interval)) ? null : $row->interval;
+				$page->time_limit = (is_null($row->time_limit)) ? null : $row->time_limit;
 				$page->position = $pageCounter;
 				$this->pages()->save($page);
 
@@ -512,6 +513,8 @@ class Test extends Model
 							$this->users()->updateExistingPivot($this->user->id, ['page_id' => $prvsPage->id]);
 							Session::put('page_id', $prvsPage->id);
 
+							$page->finish(true);
+
 							// return previous page
 							return $prvsPage->generate();
 						}
@@ -539,7 +542,7 @@ class Test extends Model
 			}
 
 			// check if it is a repeatable page
-			if(($page->repetitions > 0) AND ($this->user->pivot->page_repetitions < $page->repetitions))
+			if(($page->repetitions > 0) AND ($this->user->pivot->page_repetitions <= $page->repetitions))
 			{
 				// update Session and DB
 				$pageCounter = Session::pull('page_visit_counter');
@@ -574,6 +577,9 @@ class Test extends Model
 			$this->users()->updateExistingPivot($this->user->id, ['page_id' => $nxtPage->id]);
 			Session::put('page_id', $nxtPage->id);
 
+			// finish page
+			$page->finish();
+
 			// return to next page
 			return $nxtPage->generate();
 		}
@@ -590,6 +596,8 @@ class Test extends Model
 	 */
 	public function respond()
 	{
+		\Log::debug(Session::get('page_id'));
+
 		// if finished
 		if(is_null($this))
 			return redirect('/');
@@ -664,7 +672,7 @@ class Test extends Model
 				return true;
 
 			// check page call limits
-			if(($page->repetitions == 0) XOR ($page->repetitions < Session::get('page_visit_counter')))
+			if(($page->repetitions == 0) OR ($page->repetitions < Session::get('page_visit_counter')))
 				return true;
 		}
 
