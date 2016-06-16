@@ -137,6 +137,7 @@ class Test extends Model
 	{
 		// count pages
 		$count = $test->pages()->count();
+		$currentCount = $this->pages()->count();
 
 		if(is_null($pageStartPos))
 		{
@@ -144,7 +145,7 @@ class Test extends Model
 			$lastPage = $this->pages()->orderBy('position', 'desc')->first();
 
 			// count current pages
-			$pageStartPos = $this->pages()->get()->count();
+			$pageStartPos = $currentCount;
 
 			if(is_null($lastPage))
 			{
@@ -160,11 +161,13 @@ class Test extends Model
 		}
 		else
 		{
-			if($this->pages()->count() >= $pageStartPos)
-			{
-				// update pages
-				$this->pages()->orderBy('position')->where('position', '>=', $pageStartPos)->update(['position' => 'position + '.$count]);
-			}
+			// page position
+			if($pageStartPos < 0)
+				$pageStartPos += $currentCount + 1;
+
+			// update pages
+			if($currentCount >= $pageStartPos)
+				$this->pages()->orderBy('position')->where('position', '>=', $pageStartPos)->increment('position', $count);
 			else
 				$pageStartPos = 1;
 		}
@@ -596,7 +599,7 @@ class Test extends Model
 	 */
 	public function respond()
 	{
-		\Log::debug(Session::get('page_id'));
+		#\Log::debug(Session::get('page_id'));
 
 		// if finished
 		if(is_null($this))

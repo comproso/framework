@@ -82,6 +82,7 @@ class Page extends Model
 		else
 			$items = $this->items()->orderBy('position')->get();
 
+
 		// prepare results
 		$results = [];
 
@@ -96,6 +97,8 @@ class Page extends Model
 			$result = $item->generate($cache);
 			Session::put($item->id, $result);
 			$results[] = $result;
+
+			#\Log::debug("item:".$item->id);
 		}
 
 		// add standard assets
