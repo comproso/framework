@@ -401,6 +401,8 @@ class Test extends Model
 	 */
 	public function generate($pid = null)
 	{
+		\Log::debug(Session::get('page_visit_counter'));
+
 		// interrupt if no data available
 		if(is_null($this))
 			return null;

@@ -349,6 +349,11 @@ class Page extends Model
 
 		}*/
 
+		// update page visits for next page
+		# --> move to initialzation in next version!
+		if(Session::has('page_visit_counter'))
+			Session::put('page_visit_counter', 0);
+
 		// get items
 		if(isset($this->items))
 			$items = $this->items;
