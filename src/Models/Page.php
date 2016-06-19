@@ -73,59 +73,60 @@ class Page extends Model
 	 *
 	 */
 
+
 	// generation
 	public function generate()
 	{
-		// get Items
-		if(isset($this->items))
-			$items = $this->items;
-		else
-			$items = $this->items()->orderBy('position')->get();
-
+		\Log::debug($this->id."(".$this->position."):".Session::get('page_visit_counter').'/'.$this->repetitions);
 
 		// prepare results
 		$results = [];
 
-		foreach($items as $item)
+		// get previous session
+		if(Session::has('page_items'))
+			$session = Session::get('page_items');
+		else
+			$session = null;
+
+		foreach($this->getItems() as $item)
 		{
-			if(Session::has($item->id))
-				$cache = Session::pull($item->id);
-			else
-				$cache = null;
+			// get generation cache
+			$cache = (isset($session[$item->id])) ? $session[$item->id] : null;
 
 			// store generated Item
-			$result = $item->generate($cache);
-			Session::put($item->id, $result);
-			$results[] = $result;
-
-			#\Log::debug("item:".$item->id);
-		}
-
-		// add standard assets
-		if(isset($this->assets))
-			$assets = (is_array(json_decode($this->assets))) ? json_decode($this->assets) : [json_decode($this->assets)];
-		else
-			$assets = [];
-
-		if($this->default_assets)
-		{
-			// debug vs production files
-			/*if(getenv('APP_DEBUG') == true)*/
-				array_push($assets, "vendor/comproso/framework/comproso.js");
-			/*else
-				array_push($assets, "vendor/comproso/framework/comproso.min.js");*/
+			$results[$item->id] = $item->generate($cache);
 		}
 
 		// prepare page and return Page object
 		$page = new Page;
-		$page->template = $this->template;
-		$page->test_id = $this->test_id;
-		$page->page_id = $this->id;
+
+		// add standard assets
+		if(!Request::wantsJson())
+		{
+			if(isset($this->assets))
+				$assets = (is_array(json_decode($this->assets))) ? json_decode($this->assets) : [json_decode($this->assets)];
+			else
+				$assets = [];
+
+			if($this->default_assets)
+			{
+				// debug vs production files
+				/*if(getenv('APP_DEBUG') == true)*/
+					array_push($assets, "vendor/comproso/framework/comproso.js");
+				/*else
+					array_push($assets, "vendor/comproso/framework/comproso.min.js");*/
+			}
+
+			$page->template = $this->template;
+			$page->test_id = $this->test_id;
+			$page->page_id = $this->id;
+			$page->nav = $this->operations_template;
+			$page->assets = $assets;
+		}
+
 		$page->time_limit = $this->time_limit;
 		$page->interval = $this->repetition_interval;
 		$page->results = $results;
-		$page->nav = $this->operations_template;
-		$page->assets = $assets;
 		$page->repetitions = $this->repepetitions;
 
 		return $page;
@@ -140,8 +141,11 @@ class Page extends Model
 		else
 			$items = $this->items()->orderBy('position')->get();
 
-		// get current request
-		#$request = Request::all();
+		// get previous session
+		if(Session::has('page_items'))
+			$session = Session::get('page_items');
+		else
+			$session = null;
 
 		// validate request
 		// TBD
@@ -160,6 +164,8 @@ class Page extends Model
 			// get itemResult
 			if(Request::has('item'.$item->id))
 				$itemResult = $item->proceed(Request::input('item'.$item->id));
+			elseif(isset($session[$item->id]))
+				$itemResult = $item->proceed($session[$item->id]);
 			else
 				$itemResult = $item->proceed();
 
@@ -172,11 +178,12 @@ class Page extends Model
 			elseif($itemResult !== null)
 			{
 				// cache item if meaningful
-				Session::put($item->id, $itemResult);
-
 				$results[$item->id] = $itemResult;
 			}
 		}
+
+		// store items temporarily in Session
+		Session::put('page_items', $results);
 
 		// check reporting config
 		if(is_null($reporting))
@@ -309,6 +316,17 @@ class Page extends Model
 		return $assets;
 	}
 
+	// limits
+	public function limits()
+	{
+		if($this->repetitions <= Session::get('page_visit_counter'))
+			return true;
+		elseif(($this->time_limit > 0) AND ($this->time_limit <= (Carbon::now()->diffInSeconds(Session::get('start_time_page')))))
+			return true;
+		else
+			return false;
+	}
+
 	/**
 	 *	check if page or test limits are reached.
 	 *
@@ -351,19 +369,22 @@ class Page extends Model
 
 		// update page visits for next page
 		# --> move to initialzation in next version!
-		if(Session::has('page_visit_counter'))
-			Session::put('page_visit_counter', 0);
 
-		// get items
-		if(isset($this->items))
-			$items = $this->items;
-		else
-			$items = $this->items()->orderBy('position')->get();
-
-		foreach($items as $item)
+		// finish items
+		foreach($this->getItems(false) as $item)
 		{
 			$item->finish();
 		}
+
+	}
+
+	// get items
+	public function getItems($proceed = false)
+	{
+		if(isset($this->items))
+			return $this->items;
+		else
+			return $this->items()->orderBy('position')->get();
 	}
 
 	/**

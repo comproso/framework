@@ -71,11 +71,9 @@ function sendRequest(requestDataType)
 				}
 				else
 				{
-					console.log('1');
 					// reset data
 					if(typeof tInt !== 'undefined')
 					{
-						console.log('3');
 						clearTimeout(tInt);
 					}
 
@@ -149,7 +147,6 @@ $(document).on("ready", function () {
 	// reset data
 	if(typeof tInt !== 'undefined')
 	{
-		console.log('2');
 		clearTimeout(tInt);
 	}
 

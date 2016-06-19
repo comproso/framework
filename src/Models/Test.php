@@ -384,7 +384,7 @@ class Test extends Model
 			Session::put('test_repetition', $this->user->pivot->repetitions);
 			Session::put('start_time_global', Carbon::now());
 			Session::put('start_time_page', Carbon::now());
-			Session::put('current_page', $page->id);
+			#Session::put('current_page', $page->id);
 			Session::put('page_visit_counter', 0);
 
 			return $page;
@@ -395,75 +395,34 @@ class Test extends Model
 	}
 
 	/**
-	 *	Generate a test page.
+	 *	Generate a testing page.
 	 *
 	 *	@return object
 	 */
 	public function generate($pid = null)
 	{
-		\Log::debug(Session::get('page_visit_counter'));
-
 		// interrupt if no data available
 		if(is_null($this))
 			return null;
 
-		// display with user
-		if($this->isAuthGuarded())
+		// initialize page
+		if(!Session::has('page_id'))
 		{
-			// check if test is a valid project
-			if($this->type != "project")
-				return new Page;
-
-			// check if project is active
-			if(!$this->active)
-				return null;
-
-			// abort if finished
-			if($this->user->pivot->finished)
-				return null;
-
-			// start project
-			if(!$this->user->pivot->started)
-			{
-				// initialize project (DB and Session)
+			if($this->isAuthGuarded())
 				return $this->guarded()->initialize()->generate();
-			}
-
-			if(!$this->isContinued())
-			{
-				// do cache
-				$pageVisits = Session::pull('page_visit_counter');
-				Session::put('page_visit_counter', $pageVisits);
-				Session::put('start_time_page', Carbon::now());
-				Session::put('current_page', $this->user->pivot->page_id);
-
-				// get current stored page
-				return $this->pages()->orderBy('position')->with(['items' => function ($query) {
-					$query->orderBy('position');
-				}])->findOrFail($this->user->pivot->page_id)->generate();
-			}
-			elseif($this->continuable)
-			{
-				//
-			}
 			else
-			{
-				return null;
-			}
+				return $this->initialize()->generate();
 		}
 
-		if(is_null($pid))
-		{
+		// display page
+		if(is_int($pid))
 			return $this->pages()->orderBy('position')->with(['items' => function ($query) {
-				$query->orderBy('position');
-			}])->firstOrFail()->generate();
-		}
+					$query->orderBy('position');
+				}])->findOrFail($pid)->generate();
 		else
-		{
 			return $this->pages()->orderBy('position')->with(['items' => function ($query) {
-				$query->orderBy('position');
-			}])->findOrFail($pid)->generate();
-		}
+					$query->orderBy('position');
+				}])->findOrFail(Session::get('page_id'))->generate();
 	}
 
 	/**
@@ -473,17 +432,22 @@ class Test extends Model
 	 */
 	public function proceed($pid = null)
 	{
+		// abort if HTML request
+		if(!Request::wantsJson())
+			return null;
+
 		// validate request
 		if(!$this->validate())
 			return null;
 
 		// abort if limits are reached
-		if((Request::wantsJson()) AND (!$this->reachedLimits(true)) AND ($this->reachedLimits()))
-			return $this;
+		#if((!$this->reachedLimits(true)) AND ($this->reachedLimits()))
+		#	return $this;
 
 		// proceed with user
 		if($this->isAuthGuarded())
 		{
+
 			// check if test starts
 			if(is_null($this->user->pivot->page_id))
 				return $this->initialize();
@@ -494,104 +458,101 @@ class Test extends Model
 
 			if(Session::get('page_visit_counter') != $this->user->pivot->page_repetitions)
 				Session::put('page_visit_counter', $this->user->pivot->page_repetitions);
-
-			// get current page
-			$page = $this->pages()->with(['items' => function ($query) {
-				$query->orderBy('position');
-			}])->findOrFail($this->user->pivot->page_id);
-
-			if($page->proceed())
-			{
-				// prepare the page to display
-				// check if previous, current, or next page
-				if(boolval(Request::input('cctrl_prvs')) == true)
-				{
-					// check if leaving could be allowed
-					if($page->returnable)
-					{
-						// get previous page candidate
-						$prvsPage = $page->previous()->first();
-
-						if((!is_null($prvsPage)) AND ($prvsPage->returnable))
-						{
-							// update page_id
-							$this->users()->updateExistingPivot($this->user->id, ['page_id' => $prvsPage->id]);
-							Session::put('page_id', $prvsPage->id);
-
-							$page->finish(true);
-
-							// return previous page
-							return $prvsPage->generate();
-						}
-					}
-
-					// if current page can be recalled
-					#if($page->recallable)
-					#	return $page->generate();
-				}
-			}
-			else
-			{
-				// TBD
-
-				// check if errors can be corrected
-				if($page->recallable)
-				{
-					// update Session and DB
-					$pageCounter = Session::pull('page_visit_counter');
-					Session::put($pageCounter++);
-					$this->users()->updateExistingPivot($this->user->id, ['page_id' => $nxtPage->id, 'page_repetitions' => $this->user->pivot->page_repetitions++]);
-
-					return $page->generate()->withErrors();
-				}
-			}
-
-			// check if it is a repeatable page
-			if(($page->repetitions > 0) AND ($this->user->pivot->page_repetitions <= $page->repetitions))
-			{
-				// update Session and DB
-				$pageCounter = Session::pull('page_visit_counter');
-				$pageCounter++;
-
-				#\Log::debug($page->repetitions);
-
-				Session::put('page_visit_counter', $pageCounter);
-				$this->users()->updateExistingPivot($this->user->id, ['page_repetitions' => $pageCounter]);
-
-				// return current page
-				return $page->generate();
-			}
-
-			// get next page
-			$nxtPage = $page->next()->first();
-
-			// finish if no next page exist
-			if($nxtPage === null)
-			{
-				// set test to finished
-				$this->users()->updateExistingPivot($this->user->id, ['finished' => true]);
-
-				// clear session
-				Session::flush();
-				Session::regenerate();
-
-				return new Page;
-			}
-
-			// update page_id
-			$this->users()->updateExistingPivot($this->user->id, ['page_id' => $nxtPage->id]);
-			Session::put('page_id', $nxtPage->id);
-
-			// finish page
-			$page->finish();
-
-			// return to next page
-			return $nxtPage->generate();
 		}
-		elseif(!is_null($pid))
+
+		// get current page
+		$page = $this->pages()->with(['items' => function ($query) {
+			$query->orderBy('position');
+		}])->findOrFail($this->user->pivot->page_id);
+
+
+		// proceed page
+		$proceed = $page->proceed();
+
+		// check for finish
+		if($this->limits())
+			return $this->finish();
+
+		// check user input
+		if((boolval(Request::input('cctrl_prvs')) === true) AND ($page->returnable))	// go back
 		{
-			// TBD manual page
+			// get previous page
+			$prvsPage = $page->previous()->first();
+
+			// choose page
+			if((!is_null($prvsPage)) AND ($prvsPage->returnable))
+				$nextPage = $prvsPage;
+			else
+				$nextPage = $page->next()->first();
 		}
+		elseif($page->limits())		// limits reached
+			$nextPage = $page->next()->first();
+		else
+			$nextPage = $page;
+
+		// abort of no page available
+		if((is_null($nextPage)) OR ($page->finish))
+			return $this->finish();
+
+		// prepare response
+		$this->prepareResponse($nextPage);
+	}
+
+	// limit detection
+	public function limits()
+	{
+		// time limit
+		if(($this->time_limit->getTimestamp() > 0) AND ($this->time_limit->getTimestamp() <= Carbon::now()->diffInSeconds(Session::get('start_time_global'))))
+			return true;
+
+		// false if everything is passed
+		return false;
+	}
+
+	// prepare response
+	public function prepareResponse($page)
+	{
+		// check if next page exists
+		if(is_null($page))
+			return $this->finish();
+
+		// get data
+		$pageId = Session::pull('page_id');
+		$visits = Session::pull('page_visit_counter');
+
+		// check if current page is recalled
+		if($pageId == $page->id)
+			$visits++;
+		else
+		{
+			$visits = 0;
+
+			Session::put('HtmlResponse', true);
+		}
+
+		// update DB
+		if($this->isAuthGuarded())
+			$this->users()->updateExistingPivot($this->user->id, ['page_id' => $page->id, 'page_repetitions' => $visits]);
+
+		// update session
+		Session::put('page_id', $page->id);
+		Session::put('page_visit_counter', $visits);
+	}
+
+	// finish test
+	public function finish()
+	{
+		// update DB
+		if($this->isAuthGuarded())
+			$this->users()->updateExistingPivot($this->user->id, [
+				'page_id' => null,
+				'repetitions' => ++$this->user->pivot->repetitions,
+				'finished' => ($this->repetitions <= $this->user->pivot->repetitions) ? true : false,
+			]);
+
+		// update Session
+		Session::flush();
+		Session::regenerate();
 	}
 
 	/**
@@ -607,104 +568,25 @@ class Test extends Model
 		if(is_null($this))
 			return redirect('/');
 
-		// check if test limit(s) are reached
-		if($this->reachedLimits(true))
-		{
-			// update database
-			if($this->isAuthGuarded())
-			{
-				$this->users()->updateExistingPivot($this->user->id, ['finished' => true]);
-			}
+		// limits reached
+		if($this->limits())
+			return $this->finish();
 
-			// clear session
-			Session::flush();
-			Session::regenerate();
-
-			// redirect to home
+		// check if is endet
+		if(($this->isAuthGuarded()) AND ($this->repetitions <= $this->user->pivot->repetitions))
 			return redirect('/');
-		}
 
 		// JSON vs. Blade view
-		if(Request::wantsJson())
+		if(!Request::wantsJson())
+			return $this->generate()->toView();
+		elseif((!Session::has('HtmlResponse')) OR (Session::get('HtmlResponse')))
 		{
-			// stay on page or leave
-			if($this->reachedLimits())
-			{
-				// get page
-				$page = $this->pages()->with(['items' => function ($query) {
-					$query->orderBy('position');
-				}])->findOrFail($this->user->pivot->page_id);
+			Session::put('HtmlResponse', false);
 
-				// get next page
-				$nxtPage = $page->next()->first();
-
-				// if no next Page is available
-				if(is_null($nxtPage))
-					return redirect('/');
-
-				return response()->json(['redirect' => true, 'token' => csrf_token(), /*'assets' => $nxtPage->assets()*/]);
-			}
-			else
-				return response()->json($this->generate());
+			return response()->json(['redirect' => true, 'token' => csrf_token()]);
 		}
 		else
-			return $this->generate()->toView();
-	}
-
-	/**
-	 *	validate a request.
-	 *
-	 *	@return object
-	 */
-	public function reachedLimits($onlyTestLimits = false)
-	{
-		// abort of no object is given
-		if(is_null($this))
-			return null;
-
-		// check test time limit
-		if(($this->time_limit->getTimestamp() > 0) AND ((Carbon::now()->getTimestamp() - Session::get('start_time_global')->getTimestamp()) >= $this->time_limit->getTimestamp()))
-			return true;
-
-		// check page limits if allowed
-		if(!$onlyTestLimits)
-		{
-			// get current page
-			$page = $this->pages()->current();
-
-			// check page time limits
-			if((isset($page->time_limit)) AND ($page->time_limit > 0) AND ((Carbon::now()->getTimestamp() - Session::get('start_time_page')->getTimestamp()) >= $page->time_limit))
-				return true;
-
-			// check page call limits
-			if(($page->repetitions == 0) OR ($page->repetitions < Session::get('page_visit_counter')))
-				return true;
-		}
-
-		// return false if every check is passed
-		return false;
-	}
-
-	/**
-	 *	start a page.
-	 *
-	 *	@return object
-	 */
-	public function start($template = 'comproso::site')
-	{
-		// get assets
-		$assets = json_decode($this->assets);
-
-		// get first page
-		$page = $this->pages()->orderBy('position')->with(['items' => function ($query) {
-			$query->orderBy('position');
-		}])->firstOrFail();
-
-		// add assets
-		$assets = array_merge($assets, json_decode($page->assets));
-
-		// return view
-		return View::make($template, ['assets' => $assets])->render();
+			return response()->json($this->generate());
 	}
 
 	/**
