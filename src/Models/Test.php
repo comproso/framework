@@ -405,6 +405,10 @@ class Test extends Model
 		if(is_null($this))
 			return null;
 
+		// check if finished
+		if($this->user->pivot->finished)
+			return redirect('/');
+
 		// initialize page
 		if(!Session::has('page_id'))
 		{
