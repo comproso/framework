@@ -320,9 +320,13 @@ class Page extends Model
 	public function limits()
 	{
 		if($this->repetitions <= Session::get('page_visit_counter'))
+		{
 			return true;
+		}
 		elseif(($this->time_limit > 0) AND ($this->time_limit <= (Carbon::now()->diffInSeconds(Session::get('start_time_page')))))
+		{
 			return true;
+		}
 		else
 			return false;
 	}
