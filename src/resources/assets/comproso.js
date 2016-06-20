@@ -198,5 +198,5 @@ $(document).on("ready", function () {
 	});
 
 	// record process data on form fields
-	$('form.cpage *:not(.notrace) *[name^="item"]:not(.notrace)').change(storeProcessData());
+	$('form.cpage *:not(.notrace) input[name^="item"]:not(.notrace)').change(storeProcessData());
 });
