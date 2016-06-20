@@ -129,6 +129,9 @@ class Page extends Model
 		$page->results = $results;
 		$page->repetitions = $this->repepetitions;
 
+		// update session
+		Session::put('start_time_page', Carbon::now());
+
 		return $page;
 	}
 
