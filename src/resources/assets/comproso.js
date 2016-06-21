@@ -17,7 +17,7 @@ function sendRequest(requestDataType)
 	if(requestDataType === "json")
 	{
 		// define data type
-		$.ajax($('form.cpage').attr('action'), {
+		var request = $.ajax($('form.cpage').attr('action'), {
 			dataType: requestDataType,
 			data: $('form.cpage input, form.cpage select, form.cpage textarea').serialize(),
 			cache: false,
@@ -151,7 +151,7 @@ $(document).on("ready", function () {
 	}
 
 	// pseudorealtime
-	if($('form.cpage .cnav').length === 0)
+	if(($('form.cpage .cnav').length === 0) && ($('form.cpage input[name="ccfg_tvl"]').val() > 0))
 	{
 		// timeout
 		if($('form.cpage input[name="ccfg_tvl"]').val() > 5)
@@ -178,22 +178,27 @@ $(document).on("ready", function () {
 			// disable
 			$('form.cpage .cnav input[type="button"]').prop('disabled', true);
 
-			// set direction
-			if($(this).hasClass('bwd'))
+
+			// check request
+			if((typeof request === 'undefined') || (request.readyState === 0) || (request.readyState > 4))
 			{
-				$('form.cpage input[name="cctrl_prvs"]').val(1);
+				// set direction
+				if($(this).hasClass('bwd'))
+				{
+					$('form.cpage input[name="cctrl_prvs"]').val(1);
+				}
+				else
+				{
+					$('form.cpage input[name="cctrl_prvs"]').val(0);
+
+				}
+
+				// set end time
+				$('form.cpage input[name="ccusr_nd"]').val(Date.now());
+
+				// send form
+				sendRequest();
 			}
-			else
-			{
-				$('form.cpage input[name="cctrl_prvs"]').val(0);
-
-			}
-
-			// set end time
-			$('form.cpage input[name="ccusr_nd"]').val(Date.now());
-
-			// send form
-			sendRequest();
 		}
 	});
 
