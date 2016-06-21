@@ -131,7 +131,7 @@ function storeProcessData(element) {
 	$('form.cpage input[name="ccusr_ctns"]').val(JSON.stringify(actions));
 }
 
-$(document).on("ajaxProceeded", function () {
+$(document).on("jsonResponse", function () {
 	// auto send mode
 	if($('form.cpage .cnav').length === 0)
 	{
@@ -144,6 +144,9 @@ $(document).on("ajaxProceeded", function () {
 });
 
 $(document).on("ready", function () {
+	// set beginning time
+	$('form.cpage input[name="ccusr_tsrt"]').val(Date.now());
+
 	// reset data
 	if(typeof tInt !== 'undefined')
 	{
