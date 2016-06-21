@@ -19,7 +19,7 @@
     </head>
     <body id="comproso">
 		<div class="page ui segment">
-			<form class="cpage" method="post" action="{{ url('proceed') }}">
+			<form class="cpage ui form" method="post" action="{{ url('proceed') }}">
 				{{ csrf_field() }}
 				<input type="hidden" name="cctrl_prvs" value="0">
 				<input type="hidden" name="ccfg_tlmt" value="{{ $time_limit }}">
