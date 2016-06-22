@@ -79,9 +79,9 @@ class Item extends Model
 	}
 
 	// element proceeding
-	public function proceed($input = null, $cache = null)
+	public function proceed($cache = null)
 	{
-		return $this->element->proceed($input, $cache);
+		return $this->element->proceed($cache);
 	}
 
 	// element finish
