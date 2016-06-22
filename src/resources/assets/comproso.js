@@ -84,7 +84,7 @@ function sendRequest(requestDataType)
 			},
 			complete: function () {
 				// disable
-				$('form.cpage .cnav input[type="button"]').prop('disabled', false);
+				$('.cnav .button').prop('disabled', false).removeClass('disabled');
 
 				// set start time
 				$('form.cpage input[name="ccusr_tstrt"]').val(Date.now());
@@ -169,7 +169,7 @@ $(document).on("ready", function () {
 	}
 
 	// navigation
-	$('form.cpage .cnav input[type="button"]:not(.inactive)').click(function () {
+	$('.cnav .button:not(.inactive):not(.disabled)').click(function () {
 
 		// check if reset
 		if($(this).hasClass('rst'))
@@ -179,7 +179,7 @@ $(document).on("ready", function () {
 		else
 		{
 			// disable
-			$('form.cpage .cnav input[type="button"]').prop('disabled', true);
+			$('.cnav .button').prop('disabled', true).addClass('disabled');
 
 
 			// check request
