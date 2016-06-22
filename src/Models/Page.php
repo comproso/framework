@@ -205,7 +205,6 @@ class Page extends Model
 			// check if data were given
 			if(!empty($rawProcessData))
 			{
-
 				foreach($rawProcessData as $usrAction)
 				{
 					// adjust timestamp
@@ -218,11 +217,24 @@ class Page extends Model
 				}
 			}
 
+            // create (or update) Result model
+            if(($this->returnable) OR ($this->recallable))
+            {
+	            $save = $this->results()->firstOrNew([
+		            'user_id' => (int) Session::get('user_id'),
+		            'test_repetition_counter' => intval(Session::get('test_repetition')),
+		            'page_repetition_counter' => intval(Session::get('page_visit_counter'))
+	            ]);
+            }
+            else
+            {
+	            $save = new Result;
+	            $save->test_repetition_counter = intval(Session::get('test_repetition'));
+	            $save->user_id = (int) Session::get('user_id');
+	            $save->page_repetition_counter = intval(Session::get('page_visit_counter'));
+            }
+
 			// create Result model
-			$save = new Result;
-            $save->test_repetition_counter = intval(Session::get('test_repetition'));
-            $save->user_id = (int) Session::get('user_id');
-            $save->page_repetition_counter = intval(Session::get('page_visit_counter'));
             $save->values = json_encode($results);
             $save->process_data = json_encode($processData);
             $save->server_time_delta = intval(Carbon::now()->getTimestamp() - Session::get('start_time_page')->getTimestamp());
@@ -379,10 +391,36 @@ class Page extends Model
 			$item->finish();
 		}
 
+	}/*
+
+
+	// export a page (headline)
+	public function export()
+	{
+		// prepare cells
+		$cells = ['server_time', 'user_time'];
+
+		foreach($this->getItems() as $item)
+		{
+			if($item->export() !== null)
+				$cells = array_merge($cells, $item->export());
+		}
+
+		// set position as ID
+		$pageId = 'pos-'.$this->position;
+
+		// add position prefix
+		array_walk($cells, function (&$item) use ($pageId) {
+			$item = $pageId."_".$item;
+		});
+
+		// return result
+		return $cells;
 	}
+*/
 
 	// get items
-	public function getItems($proceed = false)
+	public function getItems()
 	{
 		if(isset($this->items))
 			return $this->items;

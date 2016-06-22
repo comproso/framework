@@ -47,11 +47,17 @@ class Result extends Model
 	    return $this->belongsTo($this->UserModel);
     }
 
+    // Page MOdel
+    public function page()
+    {
+	    return $this->belongsTo($this->PageModel);
+    }
+
     // Test Model
-    public function test()
+    /*public function test()
     {
 	    return $this->belongsTo($this->TestModel);
-    }
+    }*/
 
 
 }

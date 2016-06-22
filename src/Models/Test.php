@@ -330,9 +330,104 @@ class Test extends Model
 	 *
 	 *	@return file
 	 */
-	public function export()
+	public function export($params = [])
 	{
-		//
+		// define params
+		$includeIncompleteResults = (isset($params['incomplete'])) ? boolval($params['incomplete']) : true;
+		$deleteUsedResultsAfterExport = (isset($params['delete'])) ? boolval($params['delete']) : false;
+		$extension = (isset($params['extension'])) ? boolval($params['extension']) : 'xlsx';
+
+		// get test pages and elements
+		/*$pages = $this->pages()->orderBy('position')->with(['items' => function ($query) {
+				$query->orderBy('position');
+			}])->get();
+
+		// prepare headline
+		$hl = ['user'];
+		$hlp = [];
+
+		// create headline
+		foreach($pages as $page)
+		{
+			$hlp2 = [];	// hl page
+
+			// for each page repetition
+			for($i = 0; $i <= $page->repetitions; $i++)
+			{
+				// add page repetition
+				$hlp2 = array_merge($hlp2, array_map(function ($item) use ($i) {
+					return 'rep'.$i.'_'.$item;
+				}, $page->export()));
+			}
+
+			// add for each page
+			$hlp = array_merge($hlp, $hlp2);
+		}
+
+		// for each test repetition
+		for($i = 0; $i < $this->repetitions; $i++)
+		{
+			// add testing repetition
+			$hl = array_merge($hl, array_map(function ($item) use ($i) {
+				return 't'.$i."_".$item;
+			}, $hlp));
+		}*/
+
+		// store first line
+		#$rows[] = $hl;
+
+		// get test users and results
+		$users = $this->users()->with(['results' => function ($query) {
+			$query->groupBy('test_repetition_counter')
+				->groupBy('page_repetition_counter')
+				->orderBy('id');
+		}])->get(['users.id']);
+
+		// get pages
+		$pages = $this->pages()->orderBy('position')->get(['repetitions']);
+
+		// prepare vars
+		$testRepetitions = $this->repetitions;
+
+		// prepare export
+		$export = Excel::create(date("Y-m-d")."_".urlencode(str_replace(" ", "_", $this->name))."_".microtime(), function ($excel) use ($users, $testRepetitions, $pages) {
+			// general infos
+
+			// create sheet
+			$excel->sheet('Results', function ($sheet) use ($users, $testRepetitions, $pages) {
+
+				// create user results
+				foreach($users as $user)
+				{
+					$results = ['user' => $user->id];
+
+					// get results
+					foreach($user->results as $result)
+					{
+						$results['t'.$result->test_repetition_counter]['p'.$result->page_id]['r'.$result->page_repetition_counter] = [
+							'server_time' => $result->server_time_delta,
+							'user_time' => $result->user_time_delta,
+							'process_data' => $result->process_data
+						];
+
+						// add single results
+						foreach(json_decode($result->values) as $itemId => $value)
+						{
+							$results['t'.$result->test_repetition_counter]['p'.$result->page_id]['r'.$result->page_repetition_counter]['i'.$itemId] = $value;
+						}
+					}
+
+					// create row
+					$rows[] = array_dot($results);
+				}
+
+				// fill sheet
+				$sheet->fromArray($rows, null, 'A1', true);
+			});
+		});
+
+		// return result
+		return $export->export($extension);
 	}
 
 	/**
@@ -416,6 +511,8 @@ class Test extends Model
 				return $this->guarded()->initialize()->generate();
 			else
 				return $this->initialize()->generate();
+
+			\Log::debug('ja');
 		}
 
 		// display page

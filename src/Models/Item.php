@@ -90,4 +90,14 @@ class Item extends Model
 		if(method_exists($this->element, 'finish'))
 			$this->element->finish();
 	}
+
+/*
+	// export an item (headline)
+	public function export()
+	{
+		return (method_exists($this->element, 'export')) ? array_map(function ($item) {
+			return 'item'.$this->id."_".$item;
+		}, $this->element->export()) : null;
+	}
+*/
 }
