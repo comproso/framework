@@ -332,49 +332,14 @@ class Test extends Model
 	 */
 	public function export($params = [])
 	{
+		// abort if no results
+		if($this->results()->count() == 0)
+			return redirect()->back();
+
 		// define params
 		$includeIncompleteResults = (isset($params['incomplete'])) ? boolval($params['incomplete']) : true;
 		$deleteUsedResultsAfterExport = (isset($params['delete'])) ? boolval($params['delete']) : false;
 		$extension = (isset($params['extension'])) ? boolval($params['extension']) : 'xlsx';
-
-		// get test pages and elements
-		/*$pages = $this->pages()->orderBy('position')->with(['items' => function ($query) {
-				$query->orderBy('position');
-			}])->get();
-
-		// prepare headline
-		$hl = ['user'];
-		$hlp = [];
-
-		// create headline
-		foreach($pages as $page)
-		{
-			$hlp2 = [];	// hl page
-
-			// for each page repetition
-			for($i = 0; $i <= $page->repetitions; $i++)
-			{
-				// add page repetition
-				$hlp2 = array_merge($hlp2, array_map(function ($item) use ($i) {
-					return 'rep'.$i.'_'.$item;
-				}, $page->export()));
-			}
-
-			// add for each page
-			$hlp = array_merge($hlp, $hlp2);
-		}
-
-		// for each test repetition
-		for($i = 0; $i < $this->repetitions; $i++)
-		{
-			// add testing repetition
-			$hl = array_merge($hl, array_map(function ($item) use ($i) {
-				return 't'.$i."_".$item;
-			}, $hlp));
-		}*/
-
-		// store first line
-		#$rows[] = $hl;
 
 		// get test users and results
 		$users = $this->users()->with(['results' => function ($query) {
@@ -663,8 +628,6 @@ class Test extends Model
 	 */
 	public function respond()
 	{
-		#\Log::debug(Session::get('page_id'));
-
 		// if finished
 		if(is_null($this))
 			return redirect('/');
