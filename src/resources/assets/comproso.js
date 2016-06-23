@@ -1,4 +1,4 @@
-var version = "0.4.5";
+var version = "0.4.6";
 
 function sendRequest(requestDataType)
 {
@@ -16,6 +16,8 @@ function sendRequest(requestDataType)
 
 	if(requestDataType === "json")
 	{
+		var noredirection = true;
+
 		// define data type
 		var request = $.ajax($('form.cpage').attr('action'), {
 			dataType: requestDataType,
@@ -34,6 +36,8 @@ function sendRequest(requestDataType)
 				// check for redirection request by server
 				if(response.redirect === undefined)
 				{
+					noredirection = true;
+
 					// update comproso items
 					$('form.cpage input[name="ccfg_tmlt"]').val(response.time_limit);
 					$('form.cpage input[name="ccfg_tvl"]').val(response.interval);
@@ -66,11 +70,11 @@ function sendRequest(requestDataType)
 					});
 
 					$(document).triggerHandler('jsonResponse');
-
-
 				}
 				else
 				{
+					noredirection = false;
+
 					// reset data
 					if(typeof tInt !== 'undefined')
 					{
@@ -83,11 +87,14 @@ function sendRequest(requestDataType)
 				$(document).triggerHandler('ajaxProceeded');
 			},
 			complete: function () {
-				// disable
-				$('.cnav .button').prop('disabled', false).removeClass('disabled');
+				if(noredirection)
+				{
+					// enable
+					$('.cnav .button').prop('disabled', false).removeClass('disabled');
 
-				// set start time
-				$('form.cpage input[name="ccusr_tstrt"]').val(Date.now());
+					// set start time
+					$('form.cpage input[name="ccusr_tstrt"]').val(Date.now());
+				}
 			},
 			done: function () {
 				// update transaction time
