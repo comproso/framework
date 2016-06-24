@@ -393,7 +393,7 @@ class Test extends Model
 						// add single results
 						foreach(json_decode($result->values) as $itemId => $value)
 						{
-							$results['t'.$result->test_repetition_counter]['p'.$result->page_id]['r'.$result->page_repetition_counter][/*$items[*/$itemId/*]*/] = $value;
+							$results['t'.$result->test_repetition_counter]['p'.$result->page_id]['r'.$result->page_repetition_counter][$items[$itemId]] = $value;
 						}
 					}
 
