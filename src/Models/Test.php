@@ -345,7 +345,7 @@ class Test extends Model
 		$extension = (isset($params['extension'])) ? boolval($params['extension']) : 'xlsx';
 
 		// get raw items
-		$rawItems = $this->items()->get(['id', 'name']);
+		$rawItems = $this->items()->get(['items.id', 'items.name']);
 
 		// prepare items
 		$items = [];
@@ -354,10 +354,10 @@ class Test extends Model
 
 		// get test users and results
 		$users = $this->users()->with(['results' => function ($query) {
-			$query->groupBy('test_repetition_counter')
-				->groupBy('page_repetition_counter')
+			$query->orderBy('test_repetition_counter')
+				->orderBy('page_repetition_counter')
 				->orderBy('id');
-		}])->get(['users.id']);
+		}])->get(['users.id', 'users.identifier']);
 
 		// get pages
 		//$pages = $this->pages()->orderBy('position')->get(['repetitions']);
@@ -366,7 +366,7 @@ class Test extends Model
 		//$testRepetitions = $this->repetitions;
 
 		// prepare export
-		$export = Excel::create(date("Y-m-d")."_".urlencode(str_replace(" ", "_", $this->name))."_".microtime(), function ($excel) use ($users, $items) {
+		$export = Excel::create(date("Y-m-d")."_".urlencode(str_replace(" ", "_", $this->name))."_".mt_rand(100000, 999999), function ($excel) use ($users, $items) {
 			// general infos
 
 			// create sheet
@@ -375,7 +375,11 @@ class Test extends Model
 				// create user results
 				foreach($users as $user)
 				{
-					$results = ['user' => $user->id];
+					// continue if no results
+					if((!isset($user->results)) OR (count($user->results) === 0))
+						continue;
+
+					$results = ['user' => $user->identifier];
 
 					// get results
 					foreach($user->results as $result)
@@ -389,7 +393,7 @@ class Test extends Model
 						// add single results
 						foreach(json_decode($result->values) as $itemId => $value)
 						{
-							$results['t'.$result->test_repetition_counter]['p'.$result->page_id]['r'.$result->page_repetition_counter][$items[$itemId]] = $value;
+							$results['t'.$result->test_repetition_counter]['p'.$result->page_id]['r'.$result->page_repetition_counter][/*$items[*/$itemId/*]*/] = $value;
 						}
 					}
 
