@@ -293,6 +293,7 @@ class Test extends Model
 			$item->position = $itemCounter;
 			$item->element_type = trim($row->model);
 
+
 			// create Element
 			$row->model = trim($row->model);
 			$element = new $row->model;
@@ -302,6 +303,8 @@ class Test extends Model
 			$item->element_id = $element->id;
 
 			$item->template = (empty(trim($row->template))) ? $element->template() : trim($row->template);
+
+			$item->name = (empty(trim($row->name))) ? null : trim($row->name);
 
 			$item->cssId = (empty(trim($row->cssid))) ? null : trim($row->cssid);
 			$item->cssClass = (empty($row->cssclass)) ? null : trim($row->cssclass);
@@ -341,6 +344,14 @@ class Test extends Model
 		$deleteUsedResultsAfterExport = (isset($params['delete'])) ? boolval($params['delete']) : false;
 		$extension = (isset($params['extension'])) ? boolval($params['extension']) : 'xlsx';
 
+		// get raw items
+		$rawItems = $this->items()->get(['id', 'name']);
+
+		// prepare items
+		$items = [];
+		foreach($rawItems as $item)
+			$items[$item->id] = ($item->name !== null) ? $item->name : 'i'.$item->id;
+
 		// get test users and results
 		$users = $this->users()->with(['results' => function ($query) {
 			$query->groupBy('test_repetition_counter')
@@ -349,17 +360,17 @@ class Test extends Model
 		}])->get(['users.id']);
 
 		// get pages
-		$pages = $this->pages()->orderBy('position')->get(['repetitions']);
+		//$pages = $this->pages()->orderBy('position')->get(['repetitions']);
 
 		// prepare vars
-		$testRepetitions = $this->repetitions;
+		//$testRepetitions = $this->repetitions;
 
 		// prepare export
-		$export = Excel::create(date("Y-m-d")."_".urlencode(str_replace(" ", "_", $this->name))."_".microtime(), function ($excel) use ($users, $testRepetitions, $pages) {
+		$export = Excel::create(date("Y-m-d")."_".urlencode(str_replace(" ", "_", $this->name))."_".microtime(), function ($excel) use ($users, $items) {
 			// general infos
 
 			// create sheet
-			$excel->sheet('Results', function ($sheet) use ($users, $testRepetitions, $pages) {
+			$excel->sheet('Results', function ($sheet) use ($users, $items) {
 
 				// create user results
 				foreach($users as $user)
@@ -378,7 +389,7 @@ class Test extends Model
 						// add single results
 						foreach(json_decode($result->values) as $itemId => $value)
 						{
-							$results['t'.$result->test_repetition_counter]['p'.$result->page_id]['r'.$result->page_repetition_counter]['i'.$itemId] = $value;
+							$results['t'.$result->test_repetition_counter]['p'.$result->page_id]['r'.$result->page_repetition_counter][$items[$itemId]] = $value;
 						}
 					}
 

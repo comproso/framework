@@ -35,12 +35,14 @@ class CreateItemTable extends Migration
             $table->integer('page_id')->unsigned();
             $table->morphs('element');
             $table->integer('position')->unsigned();
-            $table->integer('proceeding_position')->unsigned();
+            #$table->integer('proceeding_position')->unsigned();
+            $table->string('name')->nullable();
             $table->string('template');
             $table->string('cssId')->nullable();
             $table->string('cssClass')->nullable();
             $table->string('validation');
             $table->timestamps();
+            #$table->unique(['page_id', 'name']);
         });
     }
 
