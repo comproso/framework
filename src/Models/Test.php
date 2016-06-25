@@ -342,7 +342,7 @@ class Test extends Model
 		// define params
 		$includeIncompleteResults = (isset($params['incomplete'])) ? boolval($params['incomplete']) : true;
 		$deleteUsedResultsAfterExport = (isset($params['delete'])) ? boolval($params['delete']) : false;
-		$extension = (isset($params['extension'])) ? boolval($params['extension']) : 'xlsx';
+		$extension = (isset($params['extension'])) ? $params['extension'] : 'xlsx';
 
 		// get raw items
 		$rawItems = $this->items()->get(['items.id', 'items.name']);
