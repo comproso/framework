@@ -342,7 +342,7 @@ class Test extends Model
 		// define params
 		$includeIncompleteResults = (isset($params['incomplete'])) ? boolval($params['incomplete']) : true;
 		$deleteUsedResultsAfterExport = (isset($params['delete'])) ? boolval($params['delete']) : false;
-		$extension = (isset($params['extension'])) ? $params['extension'] : 'xlsx';
+		//$extension = (isset($params['extension'])) ? $params['extension'] : 'xlsx';
 
 		// get raw items
 		$rawItems = $this->items()->get(['items.id', 'items.name']);
@@ -407,7 +407,7 @@ class Test extends Model
 		});
 
 		// return result
-		return $export->export($extension);
+		return $export;
 	}
 
 	/**
@@ -700,5 +700,11 @@ class Test extends Model
 	public function scopeIsActive($query)
 	{
 		return $query->where('active', true);
+	}
+
+	// has results
+	public function hasResults()
+	{
+		return ($this->results()->count() > 0) ? true : false;
 	}
 }
