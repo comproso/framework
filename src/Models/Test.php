@@ -337,12 +337,12 @@ class Test extends Model
 	{
 		// abort if no results
 		if($this->results()->count() == 0)
-			return redirect()->back();
+			return null;
 
 		// define params
 		$includeIncompleteResults = (isset($params['incomplete'])) ? boolval($params['incomplete']) : true;
 		$deleteUsedResultsAfterExport = (isset($params['delete'])) ? boolval($params['delete']) : false;
-		//$extension = (isset($params['extension'])) ? $params['extension'] : 'xlsx';
+		$extension = (isset($params['extension'])) ? $params['extension'] : 'xlsx';
 
 		// get raw items
 		$rawItems = $this->items()->get(['items.id', 'items.name']);
@@ -366,7 +366,7 @@ class Test extends Model
 		//$testRepetitions = $this->repetitions;
 
 		// prepare export
-		$export = Excel::create(date("Y-m-d")."_".urlencode(str_replace(" ", "_", $this->name))."_".mt_rand(100000, 999999), function ($excel) use ($users, $items) {
+		$export = Excel::create(date("Y-m-d")."_".urlencode(str_replace(" ", "_", $this->name)), function ($excel) use ($users, $items) {
 			// general infos
 
 			// create sheet
@@ -700,11 +700,5 @@ class Test extends Model
 	public function scopeIsActive($query)
 	{
 		return $query->where('active', true);
-	}
-
-	// has results
-	public function hasResults()
-	{
-		return ($this->results()->count() > 0) ? true : false;
 	}
 }
