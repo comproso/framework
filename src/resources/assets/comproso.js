@@ -30,7 +30,9 @@ function sendRequest(requestDataType)
 			},
 			beforeSend: function () {
 				// set end time
-				$('form.cpage input[name="ccusr_nd"]').val(Date.now());
+				var ccusrnd = Date.now();
+
+				$('form.cpage input[name="ccusr_nd"]').val(ccusrnd);
 			},
 			success: function (response) {
 				// check for redirection request by server
@@ -98,7 +100,7 @@ function sendRequest(requestDataType)
 			},
 			done: function () {
 				// update transaction time
-				$('form.cpage input[name="ccusr_rt"]').val((Date.now() - $('form.cpage input[name="ccusr_nd"]').val()));
+				$('form.cpage input[name="ccusr_rt"]').val((Date.now() - ccusrnd));
 			},
 			error: function (xhr, status, errorThrown) {
 				console.log( "Error: " + errorThrown );
@@ -152,7 +154,7 @@ $(document).on("jsonResponse", function () {
 
 $(document).on("ready", function () {
 	// set beginning time
-	$('form.cpage input[name="ccusr_tsrt"]').val(Date.now());
+	$('form.cpage input[name="ccusr_tstrt"]').val(Date.now());
 
 	// reset data
 	if(typeof tInt !== 'undefined')
