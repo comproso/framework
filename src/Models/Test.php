@@ -371,8 +371,6 @@ class Test extends Model
 		// prepare items
 		foreach($pages as $page)
 		{
-			\Log::debug($page->items);
-
 			foreach($page->items as $item)
 				$items[$item->id] = ($item->name !== null) ? $item->name : 'i'.$item->id;
 		}
