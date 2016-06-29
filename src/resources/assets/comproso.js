@@ -133,7 +133,7 @@ function storeProcessData(element) {
 		newactions.value = true;
 	}
 
-	newactions.tstmp = $('form.cpage input[name="ccusr_tstrt"]').val() - Date.now();
+	newactions.tstmp = Date.now() - $('form.cpage input[name="ccusr_tstrt"]').val() ;
 
 	actions.push(newactions);
 
