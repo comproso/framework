@@ -238,7 +238,7 @@ class Page extends Model
 			// create Result model
             $save->values = json_encode($results);
             $save->process_data = json_encode($processData);
-            $save->server_time_delta = intval($now->getDiffInSeconds($before));
+            $save->server_time_delta = intval($now->diffInSeconds($before));
             $save->user_time_delta = intval(Request::input('ccusr_nd') - $usrStartTime);
 
             // save result
