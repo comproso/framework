@@ -333,7 +333,7 @@ class Page extends Model
 	{
 		if($this->repetitions <= Session::get('page_visit_counter'))
 			return true;
-		elseif(($this->time_limit > 0) AND ($this->time_limit < round(((microtime(true) - Session::get('start_time_page')) * 1000), 0)))
+		elseif(($this->time_limit > 0) AND ($this->time_limit < round((microtime(true) - Session::get('start_time_page')), 0)))
 			return true;
 		else
 			return false;
