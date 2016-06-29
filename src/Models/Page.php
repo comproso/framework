@@ -231,11 +231,15 @@ class Page extends Model
 	            $save->page_repetition_counter = intval(Session::get('page_visit_counter'));
             }
 
+			// get times
+			$now = Carbon::now();
+			$before = Session::get('start_time_page');
+
 			// create Result model
             $save->values = json_encode($results);
             $save->process_data = json_encode($processData);
-            $save->server_time_delta = intval(Carbon::now()->getTimestamp() - Session::get('start_time_page')->getTimestamp());
-            $save->user_time_delta = intval(round(((Request::input('ccusr_nd') - $usrStartTime) / 1000), 0));
+            $save->server_time_delta = intval($now->getDiffInSeconds($before));
+            $save->user_time_delta = intval(Request::input('ccusr_nd') - $usrStartTime);
 
             // save result
             $this->results()->save($save);
