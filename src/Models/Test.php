@@ -345,12 +345,12 @@ class Test extends Model
 		$extension = (isset($params['extension'])) ? $params['extension'] : 'xlsx';
 
 		// get raw items
-		$rawItems = $this->items()->get(['items.id', 'items.name']);
+		//$rawItems = $this->items()->get(['items.id', 'items.name']);
 
 		// prepare items
-		$items = [];
+		/*$items = [];
 		foreach($rawItems as $item)
-			$items[$item->id] = ($item->name !== null) ? $item->name : 'i'.$item->id;
+			$items[$item->id] = ($item->name !== null) ? $item->name : 'i'.$item->id;*/
 
 		// get test users and results
 		$users = $this->users()->with(['results' => function ($query) {
@@ -360,17 +360,51 @@ class Test extends Model
 		}])->get(['users.id', 'users.identifier']);
 
 		// get pages
-		//$pages = $this->pages()->orderBy('position')->get(['repetitions']);
+		$pages = $this->pages()->orderBy('position')->with(['items' => function ($query) {
+			$query->orderBy('items.position')/*->addSelect([ 'items.id', 'items.name'])*/;
+		}])->get(['pages.id', 'pages.repetitions']);
+
+		// prepare columns
+		$columns['user'] = null;
+		$items = [];
+
+		// prepare items
+		foreach($pages as $page)
+		{
+			\Log::debug($page->items);
+
+			foreach($page->items as $item)
+				$items[$item->id] = ($item->name !== null) ? $item->name : 'i'.$item->id;
+		}
+
+		// create columns
+		for($i = 0; $i < $this->repetitions; $i++)
+		{
+			foreach($pages as $page)
+			{
+				for($j = 0; $j <= $page->repetitions; $j++)
+				{
+					$columns['t'.$i]['p'.$page->id]['r'.$page->repetitions] = [
+						'server_time' => null,
+						'user_time' => null,
+						'process_data' => null
+					];
+
+					foreach($page->items as $item)
+						$columns['t'.$i]['p'.$page->id]['r'.$page->repetitions][$items[$item->id]] = null;
+				}
+			}
+		}
 
 		// prepare vars
 		//$testRepetitions = $this->repetitions;
 
 		// prepare export
-		$export = Excel::create(date("Y-m-d")."_".urlencode(str_replace(" ", "_", $this->name)), function ($excel) use ($users, $items) {
+		$export = Excel::create(date("Y-m-d")."_".urlencode(str_replace(" ", "_", $this->name)), function ($excel) use ($users, $items, $columns) {
 			// general infos
 
 			// create sheet
-			$excel->sheet('Results', function ($sheet) use ($users, $items) {
+			$excel->sheet('Results', function ($sheet) use ($users, $items, $columns) {
 
 				// create user results
 				foreach($users as $user)
@@ -379,7 +413,10 @@ class Test extends Model
 					if((!isset($user->results)) OR (count($user->results) === 0))
 						continue;
 
-					$results = ['user' => $user->identifier];
+					// prepare results
+					$results = $columns;
+
+					$results['user'] = $user->identifier;
 
 					// get results
 					foreach($user->results as $result)
