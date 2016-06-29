@@ -177,7 +177,11 @@ class Page extends Model
 
 			// store results if allowed
 			if($validation->fails())
+			{
 				\Log::error(get_class($item)." (".$item->id."): invalid request data");
+
+				$results[$item->id] = null;
+			}
 			elseif($itemResult !== null)
 			{
 				// cache item if meaningful
