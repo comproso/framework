@@ -130,7 +130,7 @@ class Page extends Model
 		$page->repetitions = $this->repepetitions;
 
 		// update session
-		Session::put('start_time_page', Carbon::now());
+		Session::put('start_time_page', microtime(true));
 
 		return $page;
 	}
@@ -154,7 +154,7 @@ class Page extends Model
 		// TBD
 
 		// manage system and process data
-		$sys_time = Carbon::now()->getTimestamp() - Session::get('start_time_page')->getTimestamp();
+		$sys_time = round(((microtime(true) - Session::get('start_time_page')) * 1000), 0);
 		$usr_time = Request::input('ccusr_nd') - Request::input('ccusr_tstrt');
 		$usr_actions = Request::input('ccusr_ctns');
 
@@ -205,8 +205,8 @@ class Page extends Model
 				foreach($rawProcessData as $usrAction)
 				{
 					// adjust timestamp
-					$tmstmp = $usrAction->tstmp - $usrStartTime;
-					$tmstmp = intval(round(($tmstmp / 1000), 0));
+					$tmstmp = intval($usrAction->tstmp - $usrStartTime);
+					#$tmstmp = intval(round(($tmstmp / 1000), 0));
 
 					$processData[$tmstmp] = [
 						intval(str_replace('item', '', $usrAction->item)) => $usrAction->value,	// !!!!!
@@ -231,14 +231,10 @@ class Page extends Model
 	            $save->page_repetition_counter = intval(Session::get('page_visit_counter'));
             }
 
-			// get times
-			$now = Carbon::now();
-			$before = Session::get('start_time_page');
-
 			// create Result model
             $save->values = json_encode($results);
             $save->process_data = json_encode($processData);
-            $save->server_time_delta = intval($now->diffInSeconds($before));
+            $save->server_time_delta = intval(round(((microtime(true) - Session::get('start_time_page')) * 1000), 0));
             $save->user_time_delta = intval(Request::input('ccusr_nd') - $usrStartTime);
 
             // save result
@@ -337,7 +333,7 @@ class Page extends Model
 	{
 		if($this->repetitions <= Session::get('page_visit_counter'))
 			return true;
-		elseif(($this->time_limit > 0) AND ($this->time_limit <= (Carbon::now()->diffInSeconds(Session::get('start_time_page')))))
+		elseif(($this->time_limit > 0) AND ($this->time_limit < round(((microtime(true) - Session::get('start_time_page')) * 1000), 0)))
 			return true;
 		else
 			return false;

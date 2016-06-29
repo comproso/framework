@@ -493,7 +493,7 @@ class Test extends Model
 			Session::put('user_id', $this->user->id);
 			Session::put('test_repetition', $this->user->pivot->repetitions);
 			Session::put('start_time_global', Carbon::now());
-			Session::put('start_time_page', Carbon::now());
+			Session::put('start_time_page', microtime(true));
 			#Session::put('current_page', $page->id);
 			Session::put('page_visit_counter', 0);
 
