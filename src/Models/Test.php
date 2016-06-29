@@ -343,7 +343,7 @@ class Test extends Model
 		$includeIncompleteResults = (isset($params['incomplete'])) ? boolval($params['incomplete']) : true;
 		$deleteUsedResultsAfterExport = (isset($params['delete'])) ? boolval($params['delete']) : false;
 		$extension = (isset($params['extension'])) ? $params['extension'] : 'xlsx';
-		$suffix = (isset($params['suffix'])) ? $params['suffix'] : "";
+		$suffix = (isset($params['suffix'])) ? '_'.$params['suffix'] : "";
 
 		// get raw items
 		//$rawItems = $this->items()->get(['items.id', 'items.name']);
