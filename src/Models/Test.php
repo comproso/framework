@@ -366,7 +366,7 @@ class Test extends Model
 		}])->get(['pages.id', 'pages.repetitions']);
 
 		// prepare columns
-		$columns['user'] = null;
+		$columns['user'] = "";
 		$items = [];
 
 		// prepare items
@@ -384,13 +384,13 @@ class Test extends Model
 				for($j = 0; $j <= $page->repetitions; $j++)
 				{
 					$columns['t'.$i]['p'.$page->id]['r'.$page->repetitions] = [
-						'server_time' => null,
-						'user_time' => null,
-						'process_data' => null
+						'server_time' => "",
+						'user_time' => "",
+						'process_data' => ""
 					];
 
 					foreach($page->items as $item)
-						$columns['t'.$i]['p'.$page->id]['r'.$page->repetitions][$items[$item->id]] = null;
+						$columns['t'.$i]['p'.$page->id]['r'.$page->repetitions][$items[$item->id]] = "";
 				}
 			}
 		}
