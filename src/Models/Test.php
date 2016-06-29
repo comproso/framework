@@ -343,7 +343,7 @@ class Test extends Model
 		$includeIncompleteResults = (isset($params['incomplete'])) ? boolval($params['incomplete']) : true;
 		$deleteUsedResultsAfterExport = (isset($params['delete'])) ? boolval($params['delete']) : false;
 		$extension = (isset($params['extension'])) ? $params['extension'] : 'xlsx';
-		$addition = (isset($params['add'])) ? '_'.mt_rand(100000, 999999) : "";
+		$suffix = (isset($params['suffix'])) ? $params['suffix'] : "";
 
 		// get raw items
 		//$rawItems = $this->items()->get(['items.id', 'items.name']);
@@ -399,7 +399,7 @@ class Test extends Model
 		//$testRepetitions = $this->repetitions;
 
 		// prepare export
-		$export = Excel::create(date("Y-m-d")."_".urlencode(str_replace(" ", "_", $this->name)).$addition, function ($excel) use ($users, $items, $columns) {
+		$export = Excel::create(date("Y-m-d")."_".urlencode(str_replace(" ", "_", $this->name)).$suffix, function ($excel) use ($users, $items, $columns) {
 			// general infos
 
 			// create sheet
