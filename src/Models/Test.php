@@ -306,6 +306,8 @@ class Test extends Model
 
 			$item->name = (empty(trim($row->name))) ? null : trim($row->name);
 
+			$item->proceed = (!isset($row->proceed)) ? false : boolval($row->proceed);
+
 			$item->cssId = (empty(trim($row->cssid))) ? null : trim($row->cssid);
 			$item->cssClass = (empty($row->cssclass)) ? null : trim($row->cssclass);
 			$item->validation = (empty(trim($row->validation))) ? 'string' : trim($row->validation);
@@ -527,8 +529,6 @@ class Test extends Model
 				return $this->guarded()->initialize()->generate();
 			else
 				return $this->initialize()->generate();
-
-			\Log::debug('ja');
 		}
 
 		// display page

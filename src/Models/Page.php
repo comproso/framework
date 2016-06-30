@@ -164,6 +164,10 @@ class Page extends Model
 		// validate and proceed items
 		foreach($items as $item)
 		{
+			// skip if no proceeding needed
+			if(!$item->proceed)
+				continue;
+
 			// get itemResult
 			if(Request::has('item'.$item->id))
 				$itemResult = $item->proceed(Request::input('item'.$item->id));
@@ -178,7 +182,7 @@ class Page extends Model
 			// store results if allowed
 			if($validation->fails())
 				\Log::error(get_class($item)." (".$item->id."): invalid request data");
-			elseif($itemResult !== null)	// cache item if meaningful
+			else	// cache item
 				$results[$item->id] = $itemResult;
 		}
 
