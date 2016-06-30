@@ -37,6 +37,7 @@ class CreateItemTable extends Migration
             $table->integer('position')->unsigned();
             #$table->integer('proceeding_position')->unsigned();
             $table->string('name')->nullable();
+            $table->boolean('proceed');
             $table->string('template');
             $table->string('cssId')->nullable();
             $table->string('cssClass')->nullable();
