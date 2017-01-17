@@ -3,6 +3,18 @@
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
+/**
+ *	Test*User table representation.
+ *
+ *	This file provides the default database table for Test and User relations (c.f., laravel migrazions).
+ *
+ *  @see Comproso\Framework\Models\Test for further information about Tests.
+ *
+ * @copyright License Copyright (C) 2016 Thiemo Kunze <hallo (at) wangaz (dot) com>.
+ *
+ * @license AGPL-3.0
+ *
+ */
 class CreateTestUserTable extends Migration
 {
     /**

@@ -3,9 +3,11 @@
 /**
  *	Item table representation.
  *
- *	This file provides the default database table for test items (c.f., laravel migrazions).
+ *	This file provides the default database table for test Items (c.f., laravel migrazions).
  *
- * @copyright License Copyright (C) 2016 Thiemo Kunze <hallo (at) wangaz (dot) com>
+ *  @see Comproso\Framework\Models\Item for further information about Items.
+ *
+ * @copyright License Copyright (C) 2016 Thiemo Kunze <hallo (at) wangaz (dot) com>.
  *
  * @license AGPL-3.0
  *

@@ -1,19 +1,17 @@
 <?php
-
-/**
- *	Definition for User models.
- *
- *	This file provides a definition for the minimum requirement a User model has to
- *  fulfill to be eligible.
- *
- *	@copyright License Copyright (C) 2016-2017 Thiemo Kunze <hallo (at) wangaz (dot) com>
- *
- *	@license AGPL-3.0
- *
- */
-
  namespace Comproso\Framework\Contracts;
 
+ /**
+  *	Definition for User models.
+  *
+  *	This file provides a definition for the minimum requirement a User model has to
+  *  fulfill to be eligible.
+  *
+  *	@copyright License Copyright (C) 2016-2017 Thiemo Kunze <hallo (at) wangaz (dot) com>
+  *
+  *	@license AGPL-3.0
+  *
+  */
  interface UserModelContract
  {
 	 /**
@@ -22,6 +20,8 @@
     *   This function defines the connection between User Model and comproso Tests. That
     *   is, which tests of the current comproso instance can be accessed by a specific
     *   User.
+    *
+    *   @param array|null $data tbd.
     *
     *   @return array returns an array of Test objects including the available tests.
     */

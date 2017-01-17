@@ -1,20 +1,18 @@
 <?php
-
-/**
- *	Definition for Elements.
- *
- *	This file defines the minimum requirements for Elements (i.e., test items/types).
- *  Comproso expects Elements to respond to *data implementation*, *element generation*,
- *  and *template definition*.
- *
- *	@copyright License Copyright (C) 2016-2017 Thiemo Kunze <kunze (at) wangaz (dot) com>
- *
- *	@license AGPL-3.0
- *
- */
-
  namespace Comproso\Framework\Contracts;
 
+ /**
+  *	Definition for Elements.
+  *
+  *	This file defines the minimum requirements for Elements (i.e., test items/types).
+  *  Comproso expects Elements to respond to *data implementation*, *element generation*,
+  *  and *template definition*.
+  *
+  *	@copyright License Copyright (C) 2016-2017 Thiemo Kunze <kunze (at) wangaz (dot) com>
+  *
+  *	@license AGPL-3.0
+  *
+  */
  interface ElementContract
  {
 	 /**
@@ -55,10 +53,9 @@
     *   This function provides information about the default template. It will become obsolete in
     *   future versions of comproso.
     *
-    *   @return string template name
+    *   @return string template name.
     *
-    *   @deprecated 0.8 This function will be deprecated from version 0.8
+    *   @deprecated 0.8 This function will be deprecated from version 0.8.
     */
 	 public function template();
  }
-

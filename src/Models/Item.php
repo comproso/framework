@@ -1,7 +1,7 @@
 <?php
 
 /**
- *	Comproso Framework.
+ *	Comproso Item Model.
  *
  *	This program is free software:
  *	you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation,
@@ -25,6 +25,12 @@ use Illuminate\Database\Eloquent\Model;
 
 use Comproso\Framework\Traits\ModelTrait;
 
+/**
+ *  Item Model class.
+ *
+ *  This is a laravel Model providing the structure for Comproso Test Items.
+ *
+ */
 class Item extends Model
 {
     // table
