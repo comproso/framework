@@ -1,19 +1,13 @@
 <?php
 
 /**
- *	Comproso Framework.
+ *	Definition for User models.
  *
- *	This program is free software:
- *	you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation,
- *	either version 3 of the License, or (at your option) any later version.
- *	This program is distributed in the hope that it will be useful,
- *	but WITHOUT ANY WARRANTY;
- *	without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *	See the GNU Affero General Public License for more details.
- *	You should have received a copy of the GNU Affero General Public License along with this program.
- *	If not, see <http://www.gnu.org/licenses/>.
+ *	This file provides a definition for the minimum requirement a User model has to
+ *  fulfill to be eligible.
  *
- *	@copyright License Copyright (C) 2016 Thiemo Kunze <hallo (at) wangaz (dot) com>
+ *	@copyright License Copyright (C) 2016-2017 Thiemo Kunze <hallo (at) wangaz (dot) com>
+ *
  *	@license AGPL-3.0
  *
  */
@@ -22,6 +16,14 @@
 
  interface UserModelContract
  {
-	 // test relation
+	 /**
+    *   related comproso tests.
+    *
+    *   This function defines the connection between User Model and comproso Tests. That
+    *   is, which tests of the current comproso instance can be accessed by a specific
+    *   User.
+    *
+    *   @return array returns an array of Test objects including the available tests.
+    */
 	 public function tests($data);
  }

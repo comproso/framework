@@ -2,12 +2,12 @@
 	"name": "comproso/framework",
 	"description": "comproso behavioral measurement framework",
 	"type": "library",
-	"version": "0.7.0.0099",
+	"version": "0.7.0.00100",
 	"license": "AGPL-3.0",
 	"authors": [
 		{
-			"name": "Author",
-			"email": "impressum@comproso.org",
+			"name": "Thiemo Kunze",
+			"email": "kunze@wangaz.com",
 			"role": "Developer"
 		}
 	],

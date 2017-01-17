@@ -1,19 +1,14 @@
 <?php
 
 /**
- *	Comproso Framework.
+ *	Definition for Elements.
  *
- *	This program is free software:
- *	you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation,
- *	either version 3 of the License, or (at your option) any later version.
- *	This program is distributed in the hope that it will be useful,
- *	but WITHOUT ANY WARRANTY;
- *	without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *	See the GNU Affero General Public License for more details.
- *	You should have received a copy of the GNU Affero General Public License along with this program.
- *	If not, see <http://www.gnu.org/licenses/>.
+ *	This file defines the minimum requirements for Elements (i.e., test items/types).
+ *  Comproso expects Elements to respond to *data implementation*, *element generation*,
+ *  and *template definition*.
  *
- *	@copyright License Copyright (C) 2016 Thiemo Kunze <hallo (at) wangaz (dot) com>
+ *	@copyright License Copyright (C) 2016-2017 Thiemo Kunze <kunze (at) wangaz (dot) com>
+ *
  *	@license AGPL-3.0
  *
  */
@@ -22,15 +17,48 @@
 
  interface ElementContract
  {
-	 // Element implementation
+	 /**
+    *   Implementation of given information.
+    *
+    *   This function is used to create a specific element based on the Element represented
+    *   by this interface. For example, an Element (type) questionnaire is used, then this
+    *   function will be used during test import to create a questionnaire item that will
+    *   contain given $data.
+    *
+    *   @param array|object $data provides a data row that includes all available information
+    *   for the specific element.
+    *
+    *   @return boolean return if implementation was (not) succesful.
+    */
 	 public function implement($data);
 
-	 // Element generation
+	 /**
+    *   Generation of a specific Element.
+    *
+    *   This function is used to generate a specific Element and therefore to prepare an
+    *   Element to be presented on the web browser (i.e., do the basic rendering).
+    *
+    *   @param array|object|null $cache providing cached or previous results/information of this element.
+    *
+    *   @return object expects to return a freshly generated (i.e., using 'new') Element that contains
+    *   only relevant data to be displayed to test takers (i.e., avoid transmitting any critical
+    *   additional data).
+    */
 	 public function generate($cache = null);
 
 	 // Element proceeding
 	 #public function proceed();
 
-	 // Element template
+	 /**
+    *   Providing default template information.
+    *
+    *   This function provides information about the default template. It will become obsolete in
+    *   future versions of comproso.
+    *
+    *   @return string template name
+    *
+    *   @deprecated 0.8 This function will be deprecated from version 0.8
+    */
 	 public function template();
  }
+

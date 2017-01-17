@@ -1,7 +1,7 @@
 <?php
 
 /**
- *	German language file of comproso framework
+ *	German language file of comproso framework.
  *
  *	@author Thiemo Kunze
  *	@copyright 2016 Thiemo Kunze

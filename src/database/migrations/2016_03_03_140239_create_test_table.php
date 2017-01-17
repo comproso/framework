@@ -13,6 +13,7 @@
  *	If not, see <http://www.gnu.org/licenses/>.
  *
  * @copyright License Copyright (C) 2016 Thiemo Kunze <hallo (at) wangaz (dot) com>
+ *
  * @license AGPL-3.0
  *
  */
