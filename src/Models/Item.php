@@ -1,24 +1,5 @@
 <?php
 
-/**
- *	Comproso Item Model.
- *
- *	This program is free software:
- *	you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation,
- *	either version 3 of the License, or (at your option) any later version.
- *	This program is distributed in the hope that it will be useful,
- *	but WITHOUT ANY WARRANTY;
- *	without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- *	See the GNU Affero General Public License for more details.
- *	You should have received a copy of the GNU Affero General Public License along with this program.
- *	If not, see <http://www.gnu.org/licenses/>.
- *
- * @copyright License Copyright (C) 2016 Thiemo Kunze <hallo (at) wangaz (dot) com>
- * @license AGPL-3.0
- *
- */
-
-
 namespace Comproso\Framework\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -30,31 +11,88 @@ use Comproso\Framework\Traits\ModelTrait;
  *
  *  This is a laravel Model providing the structure for Comproso Test Items.
  *
+ *  @copyright License Copyright (C) 2016-2017 Thiemo Kunze <hallo (at) wangaz (dot) com>.
+ *
+ *  @license AGPL-3.
+ *
+ *  @see Laravel framework Eloquent for further information.
+ *
  */
 class Item extends Model
 {
-    // table
+    /**
+     *  Define used database table.
+     *
+     *  @var string $table    name of the database table associated with the Item model.
+     *
+     *  @see Laravel framework Eloquent.
+     *
+     */
     protected $table = 'items';
 
-    // whitelist
+    /**
+     *  Whitelisting of properties.
+     *
+     *  This variable allows to define properties that are more openly accessible.
+     *
+     *  @var array $guarded   names of whitelisted properties.
+     *
+     *  @see Laravel framework Eloquent.
+     *
+     */
     protected $guarded = ['results', 'template', 'cssid', 'cssclass', 'name'];
 
-    // JSON protection
+    /**
+     *  Blacklisting for JSON transfer.
+     *
+     *  @var array $hidden    names of blacklisted properties.
+     *
+     *  @see Laravel framework Eloquent.
+     *
+     */
     protected $hidden = ['template', 'validation', 'cssid', 'cssclass'];
 
-    // page
+    /**
+     *  Relation to Test Pages.
+     *
+     *  An item can be only associated with a single Page.
+     *
+     *  @return object  related Page
+     *
+     *  @see Laravel framework Eloquent.
+     *
+     */
     public function page()
     {
 	    return $this->belongsTo($this->PageModel);
     }
 
-    // elements
+    /**
+     *  Relation to Test Elements.
+     *
+     *  An item can be only associated with a single Element. Elements are represented
+     *  in an agnostic way.
+     *
+     *  @return object  related Element
+     *
+     *  @see Laravel framework Eloquent.
+     *
+     */
     public function element()
     {
 	    return $this->morphTo();
     }
 
-    // results
+    /**
+     *  Relation to Test Results.
+     *
+     *  Every Result (row) can only be associated with one Item.
+     *
+     *  @return object  related Results.
+     *
+     *  @todo verify if this representation is adequate.
+     *
+     */
     public function results()
     {
 	    return $this->belongsTo($this->ResultModel);
@@ -65,13 +103,34 @@ class Item extends Model
 	 *
 	 */
 
-	// element implementation
+	/**
+   *  Passing item implementation to Element.
+   *
+   *  This function passes the implementation of a specific Item to an Element or Item Type.
+   *
+   *  @param array|null   $data   a data row that includes all available information for a
+   *    specific item extracted from a raw Test representation.
+   *
+   *  @return boolean   fail or success.
+   *
+   */
 	public function implement($data)
 	{
 		return $this->element()->implement($data);
 	}
 
-	// element generation
+	/**
+   *  Item generation.
+   *
+   *  To provide a secured layer between a full item representation and a presented Item,
+   *  a new (temporary) Item is generated containing only necessary information for
+   *  presentation.
+   *
+   *  @param array|object|null  $cache  provides available cached information of an Item.
+   *
+   *  @return object $item.
+   *
+   */
 	public function generate($cache)
 	{
 		$item = new Item;
@@ -84,13 +143,31 @@ class Item extends Model
 		return $item;
 	}
 
-	// element proceeding
+	/**
+   *  Proceeding an item.
+   *
+   *  Uses the test taker's response to provide data and proceed the Item response or results.
+   *  Therefore, the proceeding is passed to the Element/item type.
+   *
+   *  @param array|object|null  $cache  provides available cached information of an Item.
+   *
+   *  @return mixed   proceeding results.
+   *
+   */
 	public function proceed($cache = null)
 	{
 		return $this->element->proceed($cache);
 	}
 
-	// element finish
+	/**
+   *  Element finish hook.
+   *
+   *  This hook is called if the Item/Element presentation is about to be finished. For
+   *  instance, it could be used to clear a cache.
+   *
+   *  @return void
+   *
+   */
 	public function finish()
 	{
 		if(method_exists($this->element, 'finish'))

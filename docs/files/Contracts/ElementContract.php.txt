@@ -23,7 +23,7 @@
     *   function will be used during test import to create a questionnaire item that will
     *   contain given $data.
     *
-    *   @param array|object $data provides a data row that includes all available information
+    *   @param array|object   $data   provides a data row that includes all available information
     *   for the specific element.
     *
     *   @return boolean return if implementation was (not) succesful.
@@ -36,11 +36,9 @@
     *   This function is used to generate a specific Element and therefore to prepare an
     *   Element to be presented on the web browser (i.e., do the basic rendering).
     *
-    *   @param array|object|null $cache providing cached or previous results/information of this element.
+    *   @param array|object|null    $cache    providing cached or previous results/information of this element.
     *
-    *   @return object expects to return a freshly generated (i.e., using 'new') Element that contains
-    *   only relevant data to be displayed to test takers (i.e., avoid transmitting any critical
-    *   additional data).
+    *   @return object    expects to return a freshly generated (i.e., using 'new') Element.
     */
 	 public function generate($cache = null);
 
@@ -53,9 +51,10 @@
     *   This function provides information about the default template. It will become obsolete in
     *   future versions of comproso.
     *
-    *   @return string template name.
+    *   @return string    template name.
     *
     *   @deprecated 0.8 This function will be deprecated from version 0.8.
+    *
     */
 	 public function template();
  }
