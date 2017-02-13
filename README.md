@@ -25,7 +25,7 @@ Be aware that Comproso uses *sessions*.
 
 ## Information
 Further information are available on [comproso.org](https://comproso.org/).
-Developers will be find some information in our documentation provided at [comproso.github.io/framework/](http://comproso.github.io/framework/).
+Developers can find some information in our documentation provided at [comproso.github.io/framework/](http://comproso.github.io/framework/).
 
 ## License
 Copyright (C) 2015-2017 Thiemo Kunze <kunze (ät) wangaz (dot) com>
