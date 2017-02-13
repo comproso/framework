@@ -1,6 +1,6 @@
 # Comproso Framework Package
 
-Comproso is a PHP framework for web and computer based testing in behavioral sciences, especially psychology.
+Comproso is a PHP framework for web and computer based testing in behavioral sciences, especially psychology and other behavioral sciences.
 
 ## Warning
 ### Disclaimer
@@ -8,10 +8,7 @@ Comproso is an Open Source software under AGPL-3.0 license. Nonetheless, behavio
 
 **Use this framework only in consideration of ethical and legal issues!**
 
-### Notice
-We only support responsible and ethical usage of our framework.
-
-### developemental status
+### Developemental status
 This software is still under development. Even if it could run stable, a proper configuration requires some knowledge using [composer](https://getcomposer.org/) and [laravel](https://laravel.com/). Someday, a ready to run installation bundle will be provided. If you are having trouble during setup/installation/configuration/using the framework, feel free to ask for [support](https://github.com/comproso/framework/issues).
 
 ## Installation
@@ -26,8 +23,12 @@ Be aware that Comproso uses *sessions*.
 * The `database` session driver may have problems with CSRF protection.
 * We recommend to use `redis` or `memcached` for web based and `file` for laboratory use.
 
+## Information
+Further information are available on [comproso.org](https://comproso.org/).
+Developers will be find some information in our documentation provided at [comproso.github.io/framework/](http://comproso.github.io/framework/).
+
 ## License
-Copyright (C) 2015-2017 Thiemo Kunze <kunze (at) wangaz (dot) com>
+Copyright (C) 2015-2017 Thiemo Kunze <kunze (ät) wangaz (dot) com>
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
