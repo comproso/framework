@@ -27,14 +27,14 @@ class CreateResultTable extends Migration
         Schema::create('results', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('page_id')->unsigned();
-            $table->integer('test_repetition_counter')->unsigned();
+            $table->integer('test_repetition_counter')->nullable()->unsigned();
             $table->integer('user_id')->unsigned();
-            $table->integer('page_repetition_counter');
-            $table->text('values');
-            $table->text('process_data');
-            $table->integer('server_time_delta')->unsigned();
-            $table->integer('user_time_delta')->unsigned();
-            $table->timestamps();
+            $table->integer('page_repetition_counter')->nullable();
+            $table->text('values')->nullable();
+            $table->text('process_data')->nullable();
+            $table->integer('server_time_delta')->unsigned()->nullable();
+            $table->integer('user_time_delta')->unsigned()->nullable();
+            $table->nullableTimestamps();
         });
     }
 
