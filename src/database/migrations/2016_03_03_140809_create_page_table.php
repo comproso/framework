@@ -27,9 +27,9 @@ class CreatePageTable extends Migration
         Schema::create('pages', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('test_id')->unsigned();
-            $table->integer('position')->unsigned();
+            $table->integer('position')->unsigned()->nullable();
             #$table->boolean('repeat')->default(false);
-            $table->integer('repetitions')->unsigned()->default(0);
+            $table->integer('repetitions')->unsigned()->nullable()->default(0);
             $table->integer('repetition_interval')->unsigned()->nullable()->default(null);
             $table->boolean('recallable')->default(false);
             $table->boolean('returnable')->default(false);
@@ -41,7 +41,7 @@ class CreatePageTable extends Migration
             $table->boolean('default_assets')->default(true);
             $table->boolean('group_generate')->default(false);
             $table->boolean('group_proceed')->default(false);
-            $table->timestamps();
+            $table->nullableTimestamps();
         });
     }
 

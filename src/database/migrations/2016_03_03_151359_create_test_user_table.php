@@ -33,7 +33,7 @@ class CreateTestUserTable extends Migration
             $table->integer('repetitions')->unsigned()->default(0);
             $table->boolean('started')->default(false);
             $table->boolean('finished')->default(false);
-            $table->timestamps();
+            $table->nullableTimestamps();
         });
     }
 
